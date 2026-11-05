@@ -96,7 +96,8 @@
       <div><h1 class="pg-titulo">Fila da atendente</h1><p class="sub">Um card por pedido, críticos primeiro. Aprove a resposta ou encaminhe para a área responsável. O Auditor confere também o texto que você editar.</p></div>
       <div class="acoes-cab"><button id="exportar-corr" class="btn btn--fantasma btn--p" hidden></button><button id="exportar" class="btn btn--fantasma btn--p" disabled>Exportar resolvidos (0)</button></div>
     </div>
-    <div class="progresso"><span id="progresso" class="etiqueta"></span><span class="barra"><i id="progresso-barra"></i></span></div>
+    <div class="progresso"><span id="progresso" class="etiqueta"></span><span class="barra"><i id="progresso-barra"></i></span>
+      <button class="link dica-atalhos" onclick="document.getElementById('atalhos').showModal()">Atalhos: J/K navegar · A aprovar · F encaminhar · E evidência · ?</button></div>
     <ol id="lista-aprovacao" class="lista lista--aprov"></ol>
   </section>
 
@@ -106,6 +107,17 @@
 <dialog id="evidencia" aria-labelledby="ev-titulo">
   <div class="ev-cab"><div><span class="etiqueta">Evidência da decisão</span><h2 id="ev-titulo" class="titulo"></h2></div><button class="fechar" aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button></div>
   <div id="ev-corpo"></div>
+</dialog>
+<dialog id="atalhos" aria-labelledby="at-titulo">
+  <div class="ev-cab"><div><span class="etiqueta">Fila da atendente</span><h2 id="at-titulo" class="titulo">Atalhos de teclado</h2></div><button class="fechar" aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button></div>
+  <dl class="lista-atalhos">
+    <dt><kbd>J</kbd> / <kbd>K</kbd></dt><dd>próximo / caso anterior</dd>
+    <dt><kbd>A</kbd></dt><dd>aprovar a resposta (só se o Auditor liberar)</dd>
+    <dt><kbd>F</kbd></dt><dd>encaminhar para a área selecionada</dd>
+    <dt><kbd>E</kbd></dt><dd>abrir a evidência do primeiro ticket</dd>
+    <dt><kbd>R</kbd></dt><dd>editar a resposta (<kbd>Esc</kbd> volta para a fila)</dd>
+    <dt><kbd>?</kbd></dt><dd>mostrar esta ajuda</dd>
+  </dl>
 </dialog>
 <script src="app.js"></script>
 </body>

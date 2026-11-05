@@ -297,3 +297,17 @@ textarea[readonly]{background:var(--bg);color:var(--mudo)}
 .correcao{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13.5px}
 @media (max-width:600px){.corr-campos{grid-template-columns:1fr}.encaminhar{margin-left:0;width:100%}.encaminhar select{flex:1}}
 @media (min-width:601px){.acoes-cab{flex-wrap:nowrap}}
+
+/* Atalhos, modelos, histórico */
+.progresso{grid-template-columns:auto 1fr auto}
+.dica-atalhos{font-size:12px;font-weight:500;color:var(--mudo);text-decoration:none}
+.dica-atalhos:hover{text-decoration:underline}
+.aprov-card{outline:none}
+.aprov-card.focado{box-shadow:0 0 0 3px var(--azul-2),var(--sombra)}
+.modelos{display:grid;gap:4px}
+.modelos select{min-height:40px;max-width:360px}
+.historico{display:grid;gap:6px;font-size:13px}
+.historico ol{margin:0;padding-left:18px;display:grid;gap:3px}
+kbd{font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--linha);border-bottom-width:2px;border-radius:6px;padding:1px 6px}
+.lista-atalhos{padding:18px 24px 24px;grid-template-columns:110px 1fr}
+@media (max-width:700px){.dica-atalhos{display:none}.progresso{grid-template-columns:auto 1fr}}

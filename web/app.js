@@ -4,7 +4,7 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ROTULO = { responder_auto: "resposta automática", escalar_humano: "atendente" };
 const URG = { urgente: ["bad", "Urgente"], media: ["warn", "Média"], baixa: ["info", "Baixa"] };
-const CH = { aprov: "lumina-aprovacoes", triados: "lumina-triados", override: "lumina-override", encam: "lumina-encaminhados", corr: "lumina-correcoes" };
+const CH = { hist: "lumina-historico", aprov: "lumina-aprovacoes", triados: "lumina-triados", override: "lumina-override", encam: "lumina-encaminhados", corr: "lumina-correcoes" };
 const AREAS = { juridico: "Jurídico", privacidade: "Privacidade (encarregado LGPD)", supervisao: "Supervisão do atendimento", logistica: "Logística", producao: "Produção" };
 const CATEGORIAS = ["atraso", "troca", "cancelamento", "duvida_produto", "reclamacao", "lgpd", "outro"];
 const PAGINA = 200;
@@ -18,6 +18,16 @@ const lerAprov = () => lerJSON(CH.aprov, {});
 const lerOverride = () => lerJSON(CH.override, {});
 const lerEncam = () => lerJSON(CH.encam, {});
 const lerCorr = () => lerJSON(CH.corr, {});
+const rascunhos = new Map();
+let focoFila = 0;
+
+/* Histórico das ações da atendente (sem login: fica neste navegador). */
+function registrar(acao, tickets, detalhe = "") {
+  const h = lerJSON(CH.hist, []);
+  h.push({ em: new Date().toISOString(), acao, tickets, detalhe });
+  gravarJSON(CH.hist, h.slice(-2000));
+}
+const horaBR = (iso) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 const salvarTriados = () => gravarJSON(CH.triados, [...triados]);
 
 /* Auditor da edição humana: espelho de pipeline/auditor.py (tests/test_pipeline.py confere o PROIBIDO). */
@@ -100,6 +110,21 @@ function selos(t) {
   s.push(t.acao === "responder_auto" ? `<span class="selo selo--ok">${ICO("check")}respondido</span>` : `<span class="selo selo--info">atendente</span>`);
   s.push(`<span class="selo selo--neutro">${esc(t.categoria)}</span>`);
   return s.join("");
+}
+
+/* Modelos de resposta: preenchidos só com dados do pedido e conferidos pelo Auditor antes de aparecer. */
+function modelos(t) {
+  const p = t.pedido_dados, ped = p ? `o pedido ${p.pedido} (${p.produto})` : "a sua solicitação";
+  const lista = [
+    ["Em análise", `Recebemos sua mensagem sobre ${ped} e uma atendente está analisando o seu caso. Retornamos por este mesmo canal.`],
+    ["Encaminhado à área responsável", `Seu caso sobre ${ped} foi encaminhado para a equipe responsável, que vai retornar por este mesmo canal.`],
+  ];
+  if (p) lista.push(
+    ["Status do pedido", `Pedido ${p.pedido} (${p.produto}): status ${String(p.status).replace(/_/g, " ")}, com prazo de entrega previsto para ${p.prazo_entrega}.`],
+    ["Pedir foto do produto", `Para seguirmos com a análise do pedido ${p.pedido}, envie uma foto do produto mostrando o problema.`]);
+  if ((t.evidencia?.sinais || []).includes("lgpd")) lista.push(
+    ["Privacidade (LGPD)", "Recebemos sua solicitação sobre os seus dados pessoais. Ela foi encaminhada ao responsável pela privacidade, que vai retornar por este mesmo canal."]);
+  return lista.filter(([, txt]) => !auditarTexto(txt, t.pedido, p).length);
 }
 
 /* Área sugerida por regra em código; a atendente pode trocar. */
@@ -227,6 +252,7 @@ async function triar(ids) {
   passos.forEach((p) => { p.classList.remove("ativa"); p.classList.add("feita"); });
   agora.textContent = `${total} ticket${total > 1 ? "s" : ""} passaram pelos 4 agentes`; feed.classList.add("pronto");
   ids.forEach((id) => { triados.add(id); sel.delete(id); });
+  registrar("triagem", ids, `lote de ${ids.length}`);
   salvarTriados();
   rodando = false;
   renderResultado(); renderBadge();
@@ -273,9 +299,9 @@ function renderAprovacao() {
     const t0 = g.tickets[0], a = ap[g.chave], enc = en[g.chave], [pc, pr] = rotuloPrioridade(t0), sug = areaSugerida(g.tickets);
     const ids = new Set(g.tickets.map((t) => t.ticket_id));
     const outros = t0.pedido_dados ? entrada.filter((e) => e.pedido_citado === t0.pedido && !ids.has(e.ticket_id)) : [];
-    const resp = a?.resposta ?? t0.resposta;
+    const resp = a?.resposta ?? rascunhos.get(g.chave) ?? t0.resposta, mods = a || enc ? [] : modelos(t0);
     const falhas = auditarTexto(resp, t0.pedido, t0.pedido_dados);
-    return `<li><article class="aprov-card ${tom(t0)} ${a || enc ? "aprovado" : ""}" data-grupo="${esc(g.chave)}">
+    return `<li><article class="aprov-card ${tom(t0)} ${a || enc ? "aprovado" : ""}" data-grupo="${esc(g.chave)}" tabindex="-1" aria-label="Caso ${g.tickets.map((t) => esc(t.ticket_id)).join(" e ")}">
       <header class="aprov-cab"><span class="selo selo--${pc}">${pc === "bad" ? ICO("alerta") : ""}${esc(pr)}</span>
         ${g.tickets.length > 1 ? `<span class="selo selo--warn">${g.tickets.length} tickets do mesmo pedido</span>` : ""}
         <span class="id">${g.tickets.map((t) => esc(t.ticket_id)).join(" · ")}</span></header>
@@ -286,6 +312,8 @@ function renderAprovacao() {
         const r = porId.get(e.ticket_id);
         return `<b>${esc(e.ticket_id)}</b> ${triados.has(e.ticket_id) ? (r && efetivo(r).acao === "responder_auto" ? "(respondido automaticamente)" : "") : `(ainda não triado) <button class="link" data-triar-um="${esc(e.ticket_id)}">triar agora</button>`}`;
       }).join(" · ")}</p>` : ""}
+      ${mods.length ? `<label class="modelos"><span class="etiqueta">Modelo de resposta</span><select data-modelo="${esc(g.chave)}">
+        <option value="">Usar a resposta sugerida</option>${mods.map(([n], i) => `<option value="${i}">${esc(n)}</option>`).join("")}</select></label>` : ""}
       <label><span class="etiqueta">Resposta ${g.tickets.length > 1 ? "única para os tickets do pedido" : "sugerida"}</span>
         <textarea rows="3" data-edit="${esc(g.chave)}" ${a ? "readonly" : ""}>${esc(resp)}</textarea></label>
       <div class="auditoria ${falhas.length ? "falha" : "ok"}" data-aud="${esc(g.chave)}">${falhas.length
@@ -301,6 +329,14 @@ function renderAprovacao() {
   }).join("") : `<li class="vazio">${triados.size ? "Nenhum caso para a atendente entre os tickets triados." : "Nenhum ticket triado ainda. Selecione tickets na Entrada e envie para a triagem."}</li>`;
 }
 
+function focarCaso(i) {
+  const cards = $$("#lista-aprovacao .aprov-card"); if (!cards.length) return;
+  focoFila = Math.max(0, Math.min(i, cards.length - 1));
+  cards.forEach((c, k) => c.classList.toggle("focado", k === focoFila));
+  cards[focoFila].focus({ preventScroll: true });
+  cards[focoFila].scrollIntoView({ block: "nearest" });
+}
+
 function auditarCampo(ta) {
   const g = gruposFila().find((x) => x.chave === ta.dataset.edit); if (!g) return;
   const t0 = g.tickets[0], falhas = auditarTexto(ta.value, t0.pedido, t0.pedido_dados);
@@ -312,22 +348,26 @@ function auditarCampo(ta) {
 
 function aprovar(chave) {
   const ap = lerAprov();
-  if (ap[chave]) { delete ap[chave]; gravarJSON(CH.aprov, ap); renderAprovacao(); renderBadge(); return; }
+  if (ap[chave]) { registrar("aprovação desfeita", ap[chave].tickets); delete ap[chave]; gravarJSON(CH.aprov, ap); renderAprovacao(); renderBadge(); return; }
   const g = gruposFila().find((x) => x.chave === chave); if (!g) return;
   const t0 = g.tickets[0], resp = document.querySelector(`[data-edit="${CSS.escape(chave)}"]`).value;
   if (auditarTexto(resp, t0.pedido, t0.pedido_dados).length) return;
   ap[chave] = { tickets: g.tickets.map((t) => t.ticket_id), pedido: t0.pedido || "", resposta: resp,
     editada: resp !== t0.resposta, em: new Date().toISOString() };
+  registrar("resposta aprovada", ap[chave].tickets, ap[chave].editada ? "texto editado pela atendente" : "resposta sugerida sem edição");
+  rascunhos.delete(chave);
   gravarJSON(CH.aprov, ap); renderAprovacao(); renderBadge();
 }
 
 function encaminhar(chave) {
   const en = lerEncam();
-  if (en[chave]) delete en[chave];
+  if (en[chave]) { registrar("encaminhamento desfeito", en[chave].tickets); delete en[chave]; }
   else {
     const g = gruposFila().find((x) => x.chave === chave); if (!g) return;
     en[chave] = { tickets: g.tickets.map((t) => t.ticket_id), pedido: g.tickets[0].pedido || "",
       area: document.querySelector(`[data-area="${CSS.escape(chave)}"]`).value, sugerida: areaSugerida(g.tickets), em: new Date().toISOString() };
+    const e = en[chave];
+    registrar("encaminhado", e.tickets, AREAS[e.area] + (e.area !== e.sugerida ? ` (sugestão era ${AREAS[e.sugerida]})` : ""));
   }
   gravarJSON(CH.encam, en); renderAprovacao(); renderBadge();
 }
@@ -361,6 +401,7 @@ function salvarCorrecao(id) {
   const c = lerCorr();
   c[id] = { categoria: $("#corr-cat").value, acao: $("#corr-acao").value, pedido: t.pedido || "", motivo,
     original: { categoria: t.categoria, acao: t.acao }, em: new Date().toISOString() };
+  registrar("correção registrada", [id], `${c[id].categoria} / ${ROTULO[c[id].acao]}: ${motivo}`);
   gravarJSON(CH.corr, c); abrirEvidencia(id); if (!$("#tela-aprovacao").hidden) renderAprovacao();
 }
 
@@ -403,10 +444,18 @@ function abrirEvidencia(id) {
     <dt>Resposta</dt><dd>${esc(t.resposta || "—")}</dd>
   </dl>
   ${blocoCorrecao(t0)}
+  ${blocoHistorico(id)}
   <details class="ev-log"><summary>Passo a passo dos agentes (${log.length} registros)</summary>
     <ol>${log.map((r) => `<li><b>${esc(r.etapa)}</b> ${["leitor", "juiz", "redator", "auditor"].includes(r.etapa) ? resumoLog(r) : esc(typeof r.saida === "object" ? JSON.stringify(r.saida) : r.saida)} <span class="id">${esc(r.ms)} ms</span></li>`).join("")}</ol>
   </details>`;
   $("#evidencia").showModal();
+}
+
+function blocoHistorico(id) {
+  const h = lerJSON(CH.hist, []).filter((x) => x.tickets.includes(id)).reverse();
+  if (!h.length) return "";
+  return `<div class="historico"><span class="etiqueta">Histórico da atendente</span><ol>${h.map((x) =>
+    `<li><span class="id">${horaBR(x.em)}</span> <b>${esc(x.acao)}</b>${x.detalhe ? ` · ${esc(x.detalhe)}` : ""}</li>`).join("")}</ol></div>`;
 }
 
 function ir(tela) {
@@ -415,7 +464,7 @@ function ir(tela) {
   $$(".tela").forEach((s) => (s.hidden = s.id !== "tela-" + tela));
   if (tela === "entrada") renderEntrada();
   if (tela === "resultado") renderResultado();
-  if (tela === "aprovacao") renderAprovacao();
+  if (tela === "aprovacao") { renderAprovacao(); setTimeout(() => focarCaso(focoFila), 0); }
   history.replaceState(null, "", location.search + "#" + tela);
   $("#principal").focus({ preventScroll: true });
 }
@@ -429,9 +478,9 @@ document.addEventListener("click", (e) => {
   else if (el.dataset.aprovar) aprovar(el.dataset.aprovar);
   else if (el.dataset.encaminhar) encaminhar(el.dataset.encaminhar);
   else if (el.dataset.salvarCorr) salvarCorrecao(el.dataset.salvarCorr);
-  else if (el.dataset.removerCorr) { const c = lerCorr(); delete c[el.dataset.removerCorr]; gravarJSON(CH.corr, c); abrirEvidencia(el.dataset.removerCorr); if (!$("#tela-aprovacao").hidden) renderAprovacao(); }
+  else if (el.dataset.removerCorr) { registrar("correção removida", [el.dataset.removerCorr]); const c = lerCorr(); delete c[el.dataset.removerCorr]; gravarJSON(CH.corr, c); abrirEvidencia(el.dataset.removerCorr); if (!$("#tela-aprovacao").hidden) renderAprovacao(); }
   else if (el.id === "exportar-corr") exportarCorrecoes();
-  else if (el.dataset.puxar) { const o = lerOverride(); o[el.dataset.puxar] = { em: new Date().toISOString() }; gravarJSON(CH.override, o); renderResultado(); renderBadge(); }
+  else if (el.dataset.puxar) { registrar("puxado para revisão", [el.dataset.puxar]); const o = lerOverride(); o[el.dataset.puxar] = { em: new Date().toISOString() }; gravarJSON(CH.override, o); renderResultado(); renderBadge(); }
   else if (el.dataset.filtrar) { filtro.urg = filtro.urg === el.dataset.filtrar ? "" : el.dataset.filtrar; limite = PAGINA; renderEntrada(); }
   else if (el.dataset.status) {
     filtro.status = el.dataset.status; limite = PAGINA;
@@ -442,12 +491,20 @@ document.addEventListener("click", (e) => {
   else if (el.id === "exportar") exportar();
   else if (el.id === "reiniciar") {
     if (!confirm("Reiniciar a demonstração? Triagens, aprovações, encaminhamentos e correções deste navegador serão apagadas.")) return;
-    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {}); gravarJSON(CH.encam, {}); gravarJSON(CH.corr, {});
+    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {}); gravarJSON(CH.encam, {}); gravarJSON(CH.corr, {}); gravarJSON(CH.hist, []); rascunhos.clear();
     renderBadge(); ir("entrada");
-  } else if (el.classList.contains("fechar")) $("#evidencia").close();
+  } else if (el.classList.contains("fechar")) el.closest("dialog").close();
 });
 document.addEventListener("change", (e) => {
   const c = e.target;
+  if (c.dataset.modelo !== undefined) {
+    const chave = c.dataset.modelo, g = gruposFila().find((x) => x.chave === chave), ta = document.querySelector(`[data-edit="${CSS.escape(chave)}"]`);
+    if (!g || !ta) return;
+    ta.value = c.value === "" ? g.tickets[0].resposta : modelos(g.tickets[0])[+c.value][1];
+    rascunhos.set(chave, ta.value); auditarCampo(ta);
+    if (c.value !== "") registrar("modelo de resposta usado", g.tickets.map((t) => t.ticket_id), c.options[c.selectedIndex].text);
+    return;
+  }
   if (c.dataset.marcar) { c.checked ? sel.add(c.dataset.marcar) : sel.delete(c.dataset.marcar); renderGrupos(); renderBarra(); }
   else if (c.dataset.marcarGrupo) {
     entrada.filter((t) => t.urgencia === c.dataset.marcarGrupo && !triados.has(t.ticket_id))
@@ -455,7 +512,28 @@ document.addEventListener("change", (e) => {
     renderEntrada();
   }
 });
-document.addEventListener("input", (e) => { if (e.target.dataset.edit) auditarCampo(e.target); });
+document.addEventListener("input", (e) => {
+  if (e.target.dataset.edit) { rascunhos.set(e.target.dataset.edit, e.target.value); auditarCampo(e.target); }
+});
+/* Atalhos da Fila: J/K navegam, A aprova, F encaminha, E abre a evidência, R edita a resposta, ? mostra a ajuda. */
+document.addEventListener("keydown", (e) => {
+  if ($("#tela-aprovacao").hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  if ($("#evidencia").open || $("#atalhos").open) return;
+  const alvo = e.target;
+  if (alvo.matches("input, textarea, select")) { if (e.key === "Escape") { alvo.blur(); focarCaso(focoFila); } return; }
+  const card = $$("#lista-aprovacao .aprov-card")[focoFila];
+  const acao = { j: () => focarCaso(focoFila + 1), k: () => focarCaso(focoFila - 1),
+    a: () => card?.querySelector("[data-aprovar]:not(:disabled)")?.click(),
+    f: () => card?.querySelector("button[data-encaminhar]")?.click(),
+    e: () => card?.querySelector("[data-abrir]")?.click(),
+    r: () => card?.querySelector("textarea:not([readonly])")?.focus(),
+    "?": () => $("#atalhos").showModal() }[e.key.toLowerCase()];
+  if (!acao) return;
+  e.preventDefault(); acao();
+  if ("af".includes(e.key.toLowerCase())) setTimeout(() => focarCaso(focoFila), 0);
+});
+$("#atalhos").addEventListener("click", (e) => { if (e.target.id === "atalhos" || e.target.closest(".fechar")) $("#atalhos").close(); });
+
 let tBusca;
 $("#busca").addEventListener("input", (e) => { clearTimeout(tBusca); tBusca = setTimeout(() => { filtro.busca = e.target.value; limite = PAGINA; renderEntrada(); }, 150); });
 $("#evidencia").addEventListener("click", (e) => { if (e.target.id === "evidencia") e.target.close(); });
