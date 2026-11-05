@@ -9,7 +9,7 @@ C07,"Pedido 1234 não chegou ainda",atraso|responder_auto|,normal,"1234 NÃO exi
 C08,"A capinha do 7007 veio riscada, quero devolver",troca|responder_auto|7007,normal,"7007 capinha não personalizada: regra 2, pede foto"
 C09,"Vou acionar meu advogado, o pedido 7003 está atrasado",reclamacao|escalar_humano|7003,dificil,"ameaça jurídica + atraso: P6, reclamacao vence"
 C10,"Quero cancelar a garrafa do pedido 7001",cancelamento|escalar_humano|7001,dificil,"7001 é capinha, cliente diz garrafa: P7"
-C11,"A garrafa do 7005 chegou amassada, quero trocar",troca|responder_auto|7005,dificil,"7005 personalizado; amassada = defeito nosso (análogo a 'arte cortada', P2); status enviado"
+C11,"A garrafa do 7005 chegou amassada, quero trocar",troca|escalar_humano|7005,dificil,"7005 personalizado com status enviado (não entregue): nenhuma regra cobre troca antes da entrega -> humano (decisão do usuário)"
 C12,"Quando chega o pedido 7002?",atraso|responder_auto|7002,dificil,"pergunta de prazo sem reclamação: P5; 7002 em_producao prazo 11-14"
 C13,"A arte da garrafa do 7002 não ficou como eu queria, quero trocar",troca|escalar_humano|7002,ambiguo,"personalizado; gosto do cliente x defeito não é decidível pelos dados: humano (P2)"
 C14,"Recebi a capinha do 7012 diferente do que pedi",troca|escalar_humano|7012,ambiguo,"personalizado; erro nosso ou arquivo do cliente? análogo a T15 (P2)"
