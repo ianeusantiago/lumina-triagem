@@ -352,3 +352,4 @@ kbd{font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid
 .aviso-import.erro{background:var(--bad-bg);color:var(--bad)}
 .aviso-import code,.dica-import code{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.6);padding:1px 5px;border-radius:5px}
 .dica-import{margin:-6px 0 0;font-size:12.5px;color:var(--mudo)}
+.selo{white-space:nowrap}
