@@ -23,11 +23,12 @@ Enviar resposta ao cliente, integrar com helpdesk real, reembolso/estorno, login
 ## Etapas do fluxo
 | # | Etapa | Entrada | Saída | Modelo ou regra | Condição de falha → o que acontece |
 |---|---|---|---|---|---|
-| 0 | Orquestrador | `tickets.csv`, `pedidos.csv` | execução ordenada + log | código | arquivo inválido → para e avisa |
-| 1 | Leitor | texto do ticket | JSON `{intencao, pedido_citado, sinais[]}` | Claude, temperatura 0, JSON validado | JSON inválido 2× ou intenção desconhecida → `outro` + `escalar_humano` |
-| 2 | Juiz de Regras | JSON + `pedidos.csv` + hoje | `categoria, acao, pedido` | código (`regras.md` 1–6) | pedido citado não existe → `pedido` vazio (regra 4) |
+| 0 | Orquestrador | `tickets.csv`, `pedidos.csv`, `--hoje` (padrão 2026-11-10) | execução ordenada + log | código | arquivo inválido → para e avisa |
+| 1 | Leitor | texto do ticket | JSON `{intencao, pedido_citado, produto_citado, sinais[]}`; sinais: injeção, LGPD, jurídico/Procon, erro do cliente, defeito nosso, defeito ambíguo | Claude, temperatura 0, JSON validado | JSON inválido 2× ou intenção desconhecida → `outro` + `escalar_humano` |
+| 1b | Rede de segurança | texto do ticket + JSON do Leitor | concorda ou discorda | regex (injeção, LGPD, processo/Procon) | regex acha sinal que o Leitor não marcou → `escalar_humano` + motivo no log |
+| 2 | Juiz de Regras | JSON + `pedidos.csv` + `--hoje` | `categoria, acao, pedido` | código (`regras.md` 1–6) | pedido citado não existe → `pedido` vazio (regra 4) |
 | 3 | Redator | decisão + linha do pedido | `resposta` | modelos de texto por (categoria, acao) | modelo ausente → resposta neutra de encaminhamento |
-| 4 | Auditor | linha completa | aprovada ou rebaixada | código: pedido ∈ CSV ou vazio; datas citadas ∈ linha do pedido; sem "reembolso/desconto/indeniza/novo prazo" | qualquer falha → `escalar_humano` + motivo no log |
+| 4 | Auditor | linha completa | aprovada ou rebaixada | código: pedido ∈ CSV ou vazio; datas citadas ∈ linha do pedido; sem "reembolso/desconto/indeniza/novo prazo"; produto citado bate com produto do pedido | qualquer falha → `escalar_humano` + motivo no log |
 | 5 | Saída | linhas aprovadas | `saida.csv` + fila (auto vs humano, críticos no topo) | código | — |
 
 Por que o Leitor é IA e o resto código: o texto livre precisa de interpretação; a decisão precisa ser repetível para os testes escondidos.
