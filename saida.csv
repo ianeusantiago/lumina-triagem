@@ -1,0 +1,21 @@
+ticket_id,categoria,acao,pedido,resposta
+T01,atraso,responder_auto,7003,Olá! O pedido 7003 está com status em transporte. O prazo de entrega registrado é 2026-11-08. O prazo informado já passou e estamos acompanhando o seu pedido.
+T02,cancelamento,responder_auto,7004,"Olá! O pedido 7004 está com status aguardando producao, então o cancelamento é possível. Vamos dar andamento."
+T03,cancelamento,escalar_humano,7002,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T04,troca,responder_auto,7001,"Olá! Sentimos muito. Para seguir com a troca do pedido 7001, envie uma foto do produto, por favor."
+T05,troca,escalar_humano,7005,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T06,reclamacao,escalar_humano,7009,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T07,atraso,responder_auto,7006,Olá! O pedido 7006 está com status em transporte. O prazo de entrega registrado é 2026-11-12.
+T08,lgpd,escalar_humano,,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T09,outro,responder_auto,,"Olá! Como podemos ajudar? Se for sobre um pedido, informe o número dele."
+T10,outro,escalar_humano,7008,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T11,troca,responder_auto,7011,"Olá! Sentimos muito. Para seguir com a troca do pedido 7011, envie uma foto do produto, por favor."
+T12,duvida_produto,responder_auto,,Olá! Obrigado pelo interesse. Vamos verificar a disponibilidade desse modelo e um atendente confirma para você.
+T13,atraso,responder_auto,,"Olá! Para ajudar, pode nos informar o número do seu pedido?"
+T14,cancelamento,responder_auto,7010,"Olá! O pedido 7010 está com status aguardando producao, então o cancelamento é possível. Vamos dar andamento."
+T15,troca,escalar_humano,7012,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T16,atraso,responder_auto,,"Olá! Para ajudar, pode nos informar o número do seu pedido?"
+T17,atraso,responder_auto,7008,Olá! O pedido 7008 está com status em producao. O prazo de entrega registrado é 2026-11-15.
+T18,reclamacao,escalar_humano,7009,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T19,troca,escalar_humano,7007,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."
+T20,cancelamento,escalar_humano,7005,"Olá! Seu caso foi encaminhado para um atendente da nossa equipe, que vai analisar e responder."

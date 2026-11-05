@@ -36,4 +36,4 @@ CLAUDE.md   regras de trabalho para a IA neste projeto
 Python 3, Claude API (só no Leitor), CSV de entrada/saída, tela de fila estática (link público).
 
 ## Status
-Especificação. Código ainda não escrito.
+Fatia 1 pronta: fluxo ponta a ponta com Leitor por regras de texto. `pytest -q` (46 testes) e `python -m lumina.avaliar` (20/20). Próxima: Leitor com Claude no mesmo schema.
