@@ -2,6 +2,29 @@
 
 Orquestração de agentes que lê cada ticket de atendimento da Lumina Personalizados, decide categoria e ação, encontra o pedido e sugere uma resposta usando só os dados. A atendente revisa apenas as exceções.
 
+## O que é (prévia do produto)
+Um **site com link público** (Vercel), não um app de celular. Por trás, um programa em Python com Claude.
+
+```
+┌ Lumina Triagem ─────────────── 20 tickets · hoje 10/11 ── [▶ Rodar triagem] ┐
+│  Para a atendente: 9      Respondidos sozinhos: 11      Críticos: 3         │
+├─ Fila da atendente ─────────────────┬─ Respondidos automaticamente ─────────┤
+│ [jurídico]    T18 · pedido 7009     │ T01 · atraso · 7003                   │
+│ [Procon]      T06 · pedido 7009     │   "Em transporte, prazo 08/11."       │
+│ [LGPD]        T08 · sem pedido      │ T02 · cancelamento · 7004             │
+│ [manipulação] T10 · "ignore..."     │   "Aguardando produção, cancela."     │
+│ + 5 cancelamentos e trocas          │ + 9 respostas                         │
+├─────────────────────────────────────┴───────────────────────────────────────┤
+│ Por que o T18 foi para humano: IA leu ameaça jurídica → regra 5 → auditor ok │
+└──────────────────────────────────────────────────────── [Baixar saida.csv] ┘
+```
+
+1. **O que a pessoa vê:** clica em "Rodar triagem", a fila se divide em duas colunas, críticos no topo; clicando num ticket vê o motivo; baixa o `saida.csv`.
+2. **O que roda por trás:** Python lê os tickets, Claude interpreta o texto, regras em código decidem com os dados dos pedidos, um auditor confere antes de sair.
+3. **O que a banca recebe:** link do site, `saida.csv`, repositório e slides.
+
+O site mostra resultados já calculados (com respostas salvas em /fallback), então a demo funciona mesmo se a internet ou a API falharem.
+
 ## Por que existe
 O cliente com ameaça jurídica espera 12 dias enquanto a atendente responde "oi". A triagem separa a fila sozinha e põe os casos delicados no topo.
 
