@@ -8,9 +8,9 @@ Triagem de tickets de atendimento para a Lumina Personalizados: o que os dados j
 
 ![Python](https://img.shields.io/badge/Python-3.12-2659A5?logo=python&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-Leitor-0A1633)
-![Testes](https://img.shields.io/badge/testes-22%20passando-16A34A)
+![Testes](https://img.shields.io/badge/testes-23%20passando-16A34A)
 ![Gabarito](https://img.shields.io/badge/gabarito-23%2F23-D7D900?labelColor=0A1633)
-![Casos novos](https://img.shields.io/badge/casos%20novos-20%2F20-D7D900?labelColor=0A1633)
+![Casos novos](https://img.shields.io/badge/casos%20novos-25%2F25-D7D900?labelColor=0A1633)
 
 *A IA interpreta. A regra decide. O auditor confere.*
 
@@ -75,9 +75,15 @@ Medidos com `python -m pipeline.avaliar`, no modo por regras (sem chamar a API):
 | Conjunto | Categoria | Ação | Pedido |
 |---|---|---|---|
 | Gabarito (23 tickets: 20 da demo + virada em inglês e espanhol) | 23/23 | 23/23 | 23/23 |
-| Casos novos (`evals/casos.csv`) | 20/20 | 20/20 | 20/20 |
+| Casos novos (`evals/casos.csv`, inclui 5 de segurança em inglês e espanhol) | 25/25 | 25/25 | 25/25 |
 
 Na demo: **13 de 23** respondidos automaticamente, **10** para a atendente, **5 críticos** no topo. Tickets em inglês e espanhol são entendidos e respondidos no idioma do cliente.
+
+### E o papel da IA, se a demo roda por regras?
+
+O modo por regras é a **reserva**: roda sem custo e garante que a demo funciona sem internet. Mas ele foi ajustado olhando estes tickets. Na primeira vez que viu casos novos, acertou só **10 de 15 linhas (67%)** ([`evals/baseline.md`](evals/baseline.md)), e o teste de importação achou mais 2 erros com frases novas. É exatamente aí que entra o Claude: ler texto livre que ninguém previu. Ele **nunca decide a ação**; só preenche a leitura (intenção, pedido, sinais), validada por schema, e a rede de segurança por regras confere essa leitura. A decisão é sempre do Juiz em código, porque precisa ser repetível e auditável.
+
+**Ainda não medido:** a nota do Claude nos casos novos. Com a chave no ambiente, o comando é `python -m pipeline.avaliar --modo api`.
 
 > **Limites honestos.** As regras foram escritas olhando estes dados, então o gabarito tem vazamento: os casos novos valem mais. A leitura pelo Claude ainda não foi medida, porque a demo roda no modo de reserva, sem custo. Os tickets não têm data de chegada, então o tempo de espera ainda não é medido. Erros encontrados ficam em [`ERROS.md`](ERROS.md).
 
