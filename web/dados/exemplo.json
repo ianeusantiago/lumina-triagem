@@ -18,7 +18,7 @@
    "pedido": "7003",
    "resposta": "Seu pedido 7003 está com status \"em_transporte\", prazo de entrega 2026-11-08.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -48,7 +48,7 @@
    "pedido": "7004",
    "resposta": "Cancelamento do pedido 7004 registrado; ele ainda não entrou em produção.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -78,7 +78,7 @@
    "pedido": "7002",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": false,
-   "prioridade": 2,
+   "prioridade": 3,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -108,7 +108,7 @@
    "pedido": "7001",
    "resposta": "Para a troca do pedido 7001, envie uma foto do produto, por favor.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -138,7 +138,7 @@
    "pedido": "7005",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": false,
-   "prioridade": 2,
+   "prioridade": 3,
    "evidencia": {
     "sinais": [
      "erro_cliente"
@@ -170,7 +170,7 @@
    "pedido": "7009",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": true,
-   "prioridade": 1,
+   "prioridade": 0,
    "evidencia": {
     "sinais": [
      "juridico_procon"
@@ -202,7 +202,7 @@
    "pedido": "7006",
    "resposta": "Seu pedido 7006 está com status \"em_transporte\", prazo de entrega 2026-11-12.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -257,7 +257,7 @@
    "pedido": "",
    "resposta": "Olá! Pode nos dizer o número do pedido e o assunto?",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -280,7 +280,7 @@
    "pedido": "7008",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": true,
-   "prioridade": 1,
+   "prioridade": 2,
    "evidencia": {
     "sinais": [
      "injecao"
@@ -312,7 +312,7 @@
    "pedido": "7011",
    "resposta": "Para a troca do pedido 7011, envie uma foto do produto, por favor.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -342,7 +342,7 @@
    "pedido": "",
    "resposta": "Obrigado pela pergunta! Vou verificar e retorno com a informação.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -365,7 +365,7 @@
    "pedido": "",
    "resposta": "Não encontramos o pedido. Pode confirmar o número?",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -388,7 +388,7 @@
    "pedido": "7010",
    "resposta": "Cancelamento do pedido 7010 registrado; ele ainda não entrou em produção.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -418,7 +418,7 @@
    "pedido": "7012",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": false,
-   "prioridade": 2,
+   "prioridade": 3,
    "evidencia": {
     "sinais": [
      "defeito_ambiguo"
@@ -450,7 +450,7 @@
    "pedido": "",
    "resposta": "Não encontramos o pedido. Pode confirmar o número?",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -473,7 +473,7 @@
    "pedido": "7008",
    "resposta": "Seu pedido 7008 está com status \"em_producao\", prazo de entrega 2026-11-15.",
    "critico": false,
-   "prioridade": 3,
+   "prioridade": 9,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -503,7 +503,7 @@
    "pedido": "7009",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": true,
-   "prioridade": 1,
+   "prioridade": 0,
    "evidencia": {
     "sinais": [
      "juridico_procon"
@@ -535,7 +535,7 @@
    "pedido": "7007",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": false,
-   "prioridade": 2,
+   "prioridade": 3,
    "evidencia": {
     "sinais": [],
     "regras": [
@@ -565,7 +565,7 @@
    "pedido": "7005",
    "resposta": "Seu caso foi encaminhado a uma atendente, que vai responder em breve.",
    "critico": false,
-   "prioridade": 2,
+   "prioridade": 3,
    "evidencia": {
     "sinais": [],
     "regras": [

@@ -43,7 +43,9 @@ function mostrarErro(msg) {
   document.querySelectorAll(".tela").forEach((t) => (t.hidden = true));
 }
 
-const ordenar = (l) => [...l].sort((a, b) => (b.critico - a.critico) || ((a.prioridade ?? 9) - (b.prioridade ?? 9)) || a.ticket_id.localeCompare(b.ticket_id));
+const pos = (t) => dados.tickets.indexOf(t);
+const ordenar = (l) => [...l].sort((a, b) => ((a.prioridade ?? 9) - (b.prioridade ?? 9)) || (pos(a) - pos(b)));
+const foco = new URLSearchParams(location.search).get("ticket");
 const humanos = () => ordenar(dados.tickets.filter((t) => t.acao === "escalar_humano"));
 
 function card(t, { botao = true, decisao = true, destaque = false } = {}) {
@@ -61,9 +63,14 @@ function card(t, { botao = true, decisao = true, destaque = false } = {}) {
 function renderEntrada() {
   const l = dados.tickets;
   $("#lista-entrada").innerHTML = l.length
-    ? [...l].sort((a, b) => a.ticket_id.localeCompare(b.ticket_id, undefined, { numeric: true }))
-        .map((t) => `<li>${card(t, { botao: false, decisao: false })}</li>`).join("")
+    ? l.map((t) => `<li>${card(t, { botao: false, decisao: false, destaque: t.ticket_id === foco })}</li>`).join("")
     : '<li class="estado">Nenhum ticket na entrada.</li>';
+  const alvo = l.find((t) => t.ticket_id === foco);
+  if (alvo) {
+    $("#gatilho").hidden = false;
+    $("#gatilho").innerHTML = `<span class="id">${esc(alvo.ticket_id)}</span> <span class="txt">${esc(alvo.texto)}</span>
+      <small>Posição ${pos(alvo) + 1} de ${l.length} na fila</small>`;
+  }
 }
 
 function renderResultado() {

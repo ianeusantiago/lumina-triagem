@@ -81,3 +81,5 @@ blockquote{margin:8px 0;padding:8px 12px;border-left:3px solid var(--borda);back
 @media (max-width:700px){.colunas,.contagem{grid-template-columns:1fr}.kpi{flex-direction:row;align-items:center;gap:12px}.kpi .num{font-size:24px}
   #ev-corpo dl{grid-template-columns:1fr}#ev-corpo dt{margin-top:6px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.gatilho{display:grid;gap:4px;padding:20px;margin-bottom:16px;background:var(--sup);border:1px solid var(--borda);border-left:6px solid var(--crit);border-radius:var(--raio);font-size:20px}
+.gatilho .id{font-weight:700;color:var(--crit)}.gatilho small{font-size:14px;color:var(--txt2)}
