@@ -1,0 +1,13 @@
+pedido,produto,personalizado,status,data_pedido,prazo_entrega
+7001,capinha iPhone 15,sim,entregue,2026-10-20,2026-10-30
+7002,garrafa térmica 500ml,sim,em_producao,2026-11-04,2026-11-14
+7003,caneca branca,nao,em_transporte,2026-11-01,2026-11-08
+7004,capinha Galaxy S24,sim,aguardando_producao,2026-11-09,2026-11-19
+7005,garrafa térmica 500ml,sim,enviado,2026-11-02,2026-11-09
+7006,kit 2 canecas,sim,em_transporte,2026-11-03,2026-11-12
+7007,capinha iPhone 14,nao,entregue,2026-10-25,2026-11-02
+7008,caneca mágica,sim,em_producao,2026-11-05,2026-11-15
+7009,capinha iPhone 16,sim,em_transporte,2026-10-30,2026-11-07
+7010,garrafa 750ml,nao,aguardando_producao,2026-11-10,2026-11-20
+7011,caneca branca,nao,entregue,2026-10-28,2026-11-05
+7012,capinha Moto G,sim,entregue,2026-10-22,2026-11-01
