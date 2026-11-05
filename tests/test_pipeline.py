@@ -237,3 +237,10 @@ def test_juridico_e_lgpd_em_ingles_e_espanhol_sem_falso_positivo():
     assert sinais_criticos("Please delete my personal data")["lgpd"]
     assert sinais_criticos("Borren mis datos personales")["lgpd"]
     assert not sinais_criticos("Pedido atrasado por causa da alta demanda")["juridico"]
+
+
+def test_pre_triagem_reclamacao_de_atraso_em_outros_idiomas():
+    from pipeline.pre_triagem import classificar
+    assert classificar("X", "Hi, where is my order 7003? It was supposed to arrive on the 8th")["urgencia"] == "media"
+    assert classificar("X", "¿Dónde está mi pedido 7003? No ha llegado")["urgencia"] == "media"
+    assert classificar("X", "Qual o prazo do pedido 7008?")["urgencia"] == "baixa"

@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-11-05T13:26:01",
+ "gerado_em": "2026-11-05T13:31:46",
  "hoje": "2026-11-10",
  "regra": "pre_triagem (código, sem IA)",
  "tickets": [
@@ -166,8 +166,8 @@
   {
    "ticket_id": "T21",
    "texto": "Hi, where is my order 7003? It was supposed to arrive on the 8th",
-   "urgencia": "baixa",
-   "motivo": "consulta de prazo",
+   "urgencia": "media",
+   "motivo": "reclamação de atraso",
    "categoria_prevista": "atraso",
    "pedido_citado": "7003"
   },

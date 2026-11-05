@@ -5,9 +5,10 @@ Quem decide `acao` continua sendo o Juiz, na triagem.
 """
 import re
 
-from .rede import AMBIGUO, DEFEITO, ERRO_CLIENTE, ler_regex, norm, sinais_criticos
+from .rede import AMBIGUO, DEFEITO, ERRO_CLIENTE, INTENCAO, ler_regex, norm, sinais_criticos
 
-ATRASO_RECLAMADO = r"cade|nao chegou|atrasad|era pra ter chegado"
+# Mesmo padrão de reclamação de atraso da rede (PT, EN e ES), para a urgência não divergir da triagem.
+ATRASO_RECLAMADO = dict(INTENCAO)["atraso"]
 URGENCIAS = ("urgente", "media", "baixa")
 MOTIVO_CRITICO = {"juridico": "ameaça jurídica / Procon", "lgpd": "pedido LGPD", "injecao": "tentativa de manipulação"}
 

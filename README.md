@@ -29,7 +29,7 @@ Na fila de suporte, um cliente ameaçando processar a empresa há 12 dias aparec
 | Entrada por urgência | Orquestração dos agentes | Fila agrupada por pedido |
 |---|---|---|
 | ![Entrada](docs/img/entrada.png) | ![Triagem](docs/img/triagem.png) | ![Fila](docs/img/fila.png) |
-| Pré-classificada em Urgente, Média e Baixa antes da triagem. Seleciona um grupo inteiro ou um ticket só. | Leitor, Juiz, Redator e Auditor processam cada ticket do lote, ao vivo. | Um card por pedido, com situação calculada ("atrasado há 3 dias") e resposta conferida pelo Auditor. |
+| Pré-classificada em Urgente, Média e Baixa antes da triagem. Seleciona um grupo inteiro ou um ticket só. | Leitor, Juiz, Redator e Auditor processam cada ticket do lote, ao vivo. | Um card por pedido: o 7009 junta Procon, processo e "my lawyer" (3 tickets, 2 idiomas), atrasado há 3 dias. |
 
 ## Como funciona
 
