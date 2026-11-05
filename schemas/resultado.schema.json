@@ -1,0 +1,259 @@
+{
+  "$defs": {
+    "Auditoria": {
+      "properties": {
+        "aprovado": {
+          "title": "Aprovado",
+          "type": "boolean"
+        },
+        "falhas": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Falhas",
+          "type": "array"
+        }
+      },
+      "required": [
+        "aprovado"
+      ],
+      "title": "Auditoria",
+      "type": "object"
+    },
+    "Evidencia": {
+      "properties": {
+        "sinais": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sinais",
+          "type": "array"
+        },
+        "regras": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Regras",
+          "type": "array"
+        },
+        "motivo": {
+          "title": "Motivo",
+          "type": "string"
+        },
+        "auditor": {
+          "$ref": "#/$defs/Auditoria"
+        },
+        "leitor_vs_rede": {
+          "title": "Leitor Vs Rede",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sinais",
+        "regras",
+        "motivo",
+        "auditor",
+        "leitor_vs_rede"
+      ],
+      "title": "Evidencia",
+      "type": "object"
+    },
+    "LogEntrada": {
+      "properties": {
+        "ticket_id": {
+          "title": "Ticket Id",
+          "type": "string"
+        },
+        "etapa": {
+          "title": "Etapa",
+          "type": "string"
+        },
+        "entrada": {
+          "title": "Entrada"
+        },
+        "saida": {
+          "title": "Saida"
+        },
+        "ms": {
+          "title": "Ms",
+          "type": "number"
+        },
+        "versao": {
+          "title": "Versao",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ticket_id",
+        "etapa",
+        "entrada",
+        "saida",
+        "ms",
+        "versao"
+      ],
+      "title": "LogEntrada",
+      "type": "object"
+    },
+    "Resumo": {
+      "properties": {
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        },
+        "auto": {
+          "title": "Auto",
+          "type": "integer"
+        },
+        "humano": {
+          "title": "Humano",
+          "type": "integer"
+        },
+        "criticos": {
+          "title": "Criticos",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "auto",
+        "humano",
+        "criticos"
+      ],
+      "title": "Resumo",
+      "type": "object"
+    },
+    "TicketResultado": {
+      "properties": {
+        "ticket_id": {
+          "title": "Ticket Id",
+          "type": "string"
+        },
+        "texto": {
+          "title": "Texto",
+          "type": "string"
+        },
+        "categoria": {
+          "enum": [
+            "atraso",
+            "troca",
+            "cancelamento",
+            "duvida_produto",
+            "reclamacao",
+            "lgpd",
+            "outro"
+          ],
+          "title": "Categoria",
+          "type": "string"
+        },
+        "acao": {
+          "enum": [
+            "responder_auto",
+            "escalar_humano"
+          ],
+          "title": "Acao",
+          "type": "string"
+        },
+        "pedido": {
+          "title": "Pedido",
+          "type": "string"
+        },
+        "resposta": {
+          "title": "Resposta",
+          "type": "string"
+        },
+        "critico": {
+          "title": "Critico",
+          "type": "boolean"
+        },
+        "prioridade": {
+          "description": "menor = mais urgente",
+          "title": "Prioridade",
+          "type": "integer"
+        },
+        "evidencia": {
+          "$ref": "#/$defs/Evidencia"
+        },
+        "pedido_dados": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pedido Dados"
+        }
+      },
+      "required": [
+        "ticket_id",
+        "texto",
+        "categoria",
+        "acao",
+        "pedido",
+        "resposta",
+        "critico",
+        "prioridade",
+        "evidencia"
+      ],
+      "title": "TicketResultado",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "gerado_em": {
+      "title": "Gerado Em",
+      "type": "string"
+    },
+    "hoje": {
+      "title": "Hoje",
+      "type": "string"
+    },
+    "versao": {
+      "title": "Versao",
+      "type": "string"
+    },
+    "modo": {
+      "enum": [
+        "api",
+        "fallback",
+        "regex"
+      ],
+      "title": "Modo",
+      "type": "string"
+    },
+    "resumo": {
+      "$ref": "#/$defs/Resumo"
+    },
+    "tickets": {
+      "items": {
+        "$ref": "#/$defs/TicketResultado"
+      },
+      "title": "Tickets",
+      "type": "array"
+    },
+    "log": {
+      "items": {
+        "$ref": "#/$defs/LogEntrada"
+      },
+      "title": "Log",
+      "type": "array"
+    }
+  },
+  "required": [
+    "gerado_em",
+    "hoje",
+    "versao",
+    "modo",
+    "resumo",
+    "tickets",
+    "log"
+  ],
+  "title": "Resultado",
+  "type": "object"
+}

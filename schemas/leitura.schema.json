@@ -1,0 +1,98 @@
+{
+  "$defs": {
+    "Sinais": {
+      "additionalProperties": false,
+      "properties": {
+        "injecao": {
+          "default": false,
+          "title": "Injecao",
+          "type": "boolean"
+        },
+        "lgpd": {
+          "default": false,
+          "title": "Lgpd",
+          "type": "boolean"
+        },
+        "juridico": {
+          "default": false,
+          "title": "Juridico",
+          "type": "boolean"
+        },
+        "erro_cliente": {
+          "default": false,
+          "title": "Erro Cliente",
+          "type": "boolean"
+        },
+        "defeito_nosso": {
+          "default": false,
+          "title": "Defeito Nosso",
+          "type": "boolean"
+        },
+        "defeito_ambiguo": {
+          "default": false,
+          "title": "Defeito Ambiguo",
+          "type": "boolean"
+        }
+      },
+      "title": "Sinais",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Saída do Leitor (IA). Validada; inválida 2x -> escalar_humano.",
+  "properties": {
+    "intencao": {
+      "enum": [
+        "atraso",
+        "troca",
+        "cancelamento",
+        "duvida_produto",
+        "reclamacao",
+        "lgpd",
+        "outro",
+        "desconhecida"
+      ],
+      "title": "Intencao",
+      "type": "string"
+    },
+    "pedido_citado": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "número de 4 dígitos citado, ou null",
+      "title": "Pedido Citado"
+    },
+    "produto_citado": {
+      "anyOf": [
+        {
+          "enum": [
+            "capinha",
+            "caneca",
+            "garrafa"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Produto Citado"
+    },
+    "sinais": {
+      "$ref": "#/$defs/Sinais"
+    }
+  },
+  "required": [
+    "intencao",
+    "sinais"
+  ],
+  "title": "Leitura",
+  "type": "object"
+}
