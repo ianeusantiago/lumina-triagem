@@ -6,7 +6,9 @@ from .modelos import Leitura, Sinais
 
 KW = {
     "injecao": r"ignore (as |todas )?(as )?regras|ignore.*instru|reembols[ea] (agora|ja)|voce agora e|system prompt|sistema:|classifique como|prometa",
-    "lgpd": r"dados pessoais|apag\w* (os |todos )?(os )?(meus )?dados|exclu\w* (os )?(meu \w+ e )?(meus )?dados|lgpd",
+    # pedido de exclusão/remoção de dados, conta ou cadastro, em qualquer ordem (verbo antes ou depois)
+    "lgpd": r"dados pessoais|lgpd|\b(apag|exclu|remov|delet)\w*\b.{0,40}\b(dados|cadastro|conta)\b"
+            r"|\b(dados|cadastro|conta)\b.{0,40}\b(apag|exclu|remov|delet)\w*",
     "juridico": r"procon|processar|process[oa] |advogad|justica|reclame aqui",
 }
 INTENCAO = [
@@ -42,8 +44,8 @@ def ler_regex(texto):
         if re.search(rx, t):
             intencao = nome
             break
-    if intencao == "outro" and amb:
-        intencao = "troca"
+    if intencao == "outro" and (amb or re.search(DEFEITO, t)):
+        intencao = "troca"  # defeito relatado prevalece sobre o "atraso" deduzido só pelo número do pedido
     if intencao == "outro" and nums:
         intencao = "atraso"
     if crit["lgpd"]:

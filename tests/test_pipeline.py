@@ -174,3 +174,19 @@ def test_servidor_tria_lote_com_mesmo_pipeline():
     assert dec["N1"]["acao"] == "escalar_humano" and dec["N1"]["critico"]
     assert dec["N2"]["acao"] == "responder_auto"
     assert {t["ticket_id"]: t["urgencia"] for t in r["entrada"]["tickets"]}["N1"] == "urgente"
+
+
+def test_rede_lgpd_reconhece_variacoes_sem_falso_positivo():
+    from pipeline.rede import sinais_criticos
+    for t in ["Me apaguem do cadastro, quero meus dados excluídos", "Quero que removam minha conta e todos os meus dados",
+              "Exijo a exclusão do meu cadastro", "Quero que apaguem todos os meus dados pessoais de vocês"]:
+        assert sinais_criticos(t)["lgpd"], t
+    for t in ["Como faço para excluir um item do carrinho?", "Quero cancelar o pedido 7004", "Apaguei o e-mail sem querer, reenviem o rastreio"]:
+        assert not sinais_criticos(t)["lgpd"], t
+
+
+def test_defeito_relatado_vira_troca_e_nao_atraso():
+    from pipeline.rede import ler_regex
+    assert ler_regex("A garrafa do pedido 7002 veio amassada").intencao == "troca"
+    assert ler_regex("Minha caneca do pedido 7011 veio rachada").intencao == "troca"
+    assert ler_regex("Cadê meu pedido 7003? Era pra ter chegado dia 8").intencao == "atraso"
