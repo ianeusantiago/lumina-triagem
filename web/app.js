@@ -39,7 +39,7 @@ async function carregar() {
 function mostrarErro(msg) {
   dados = null;
   const e = $("#estado"); e.className = "estado erro"; e.setAttribute("role", "alert");
-  e.innerHTML = `<strong>Não deu para carregar a triagem.</strong> ${esc(msg)} <button class="secundario" onclick="location.reload()">Tentar de novo</button>`;
+  e.innerHTML = `<strong>Não deu para carregar a triagem.</strong> ${esc(msg)} <button class="btn btn--fantasma" onclick="location.reload()">Tentar de novo</button>`;
   document.querySelectorAll(".tela").forEach((t) => (t.hidden = true));
 }
 
@@ -48,28 +48,38 @@ const ordenar = (l) => [...l].sort((a, b) => ((a.prioridade ?? 9) - (b.prioridad
 const foco = new URLSearchParams(location.search).get("ticket");
 const humanos = () => ordenar(dados.tickets.filter((t) => t.acao === "escalar_humano"));
 
-function card(t, { botao = true, decisao = true, destaque = false } = {}) {
-  const cls = ["card", decisao ? (t.critico ? "critico" : t.acao === "escalar_humano" ? "humano" : "auto") : "", destaque ? "destaque" : ""].join(" ");
-  const meta = decisao
-    ? `<span class="meta">${t.critico ? '<span class="tag crit">⚠ Crítico</span>' : ""}
-       <span class="tag ${t.acao === "responder_auto" ? "auto" : "hum"}">${esc(ROTULO[t.acao] || t.acao)}</span>
-       <span class="tag">${esc(t.categoria)}</span>${t.pedido ? `<span class="tag">pedido ${esc(t.pedido)}</span>` : ""}</span>`
-    : "";
+const SINAL = { juridico: ["bad", "jurídico / Procon"], lgpd: ["bad", "LGPD"], injecao: ["warn", "manipulação"],
+  erro_cliente: ["info", "erro do cliente"], defeito_nosso: ["info", "defeito nosso"], defeito_ambiguo: ["info", "defeito ambíguo"] };
+const ICO = (n) => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const tom = (t) => t.acao === "responder_auto" ? "auto" : (t.evidencia?.sinais || []).includes("injecao") ? "manip" : t.critico ? "critico" : "humano";
+function selos(t) {
+  const s = (t.evidencia?.sinais || []).filter((x) => SINAL[x]).map((x) => `<span class="selo selo--${SINAL[x][0]}">${SINAL[x][0] === "bad" ? ICO("alerta") : ""}${esc(SINAL[x][1])}</span>`);
+  s.push(t.acao === "responder_auto" ? `<span class="selo selo--ok">${ICO("check")}respondido</span>` : `<span class="selo selo--info">atendente</span>`);
+  s.push(`<span class="selo selo--neutro">${esc(t.categoria)}</span>`);
+  if (t.pedido) s.push(`<span class="selo selo--neutro">pedido ${esc(t.pedido)}</span>`);
+  return s.join("");
+}
+
+function card(t, { botao = true, decisao = true, destaque = false, i = 0 } = {}) {
+  const cls = ["tk", decisao ? tom(t) : "", destaque ? "destaque" : ""].join(" ");
   const tag = botao ? "button" : "div";
-  return `<${tag} class="${cls}" ${botao ? `data-abrir="${esc(t.ticket_id)}" aria-label="Ver evidência de ${esc(t.ticket_id)}"` : ""}>
-    <span class="id">${esc(t.ticket_id)}</span><span class="txt">${esc(t.texto)}</span>${meta}</${tag}>`;
+  return `<${tag} class="${cls}" style="--i:${i}" ${botao ? `data-abrir="${esc(t.ticket_id)}" aria-label="Ver evidência de ${esc(t.ticket_id)}"` : ""}>
+    <span class="tk__topo"><span class="id">${esc(t.ticket_id)}</span>${botao ? '<span class="id">ver evidência →</span>' : ""}</span>
+    <span class="txt">${esc(t.texto)}</span>${decisao ? `<span class="meta">${selos(t)}</span>` : ""}</${tag}>`;
 }
 
 function renderEntrada() {
-  const l = dados.tickets;
+  const num = (t) => parseInt(String(t.ticket_id).replace(/\D/g, ""), 10) || 0;
+  const l = [...dados.tickets].sort((a, b) => num(a) - num(b));
   $("#lista-entrada").innerHTML = l.length
-    ? l.map((t) => `<li>${card(t, { botao: false, decisao: false, destaque: t.ticket_id === foco })}</li>`).join("")
+    ? l.map((t, i) => `<li>${card(t, { botao: false, decisao: false, destaque: t.ticket_id === foco, i })}</li>`).join("")
     : '<li class="estado">Nenhum ticket na entrada.</li>';
+  $("#h-total").textContent = l.length; $("#h-hoje").textContent = dados.hoje ?? "—";
   const alvo = l.find((t) => t.ticket_id === foco);
   if (alvo) {
     $("#gatilho").hidden = false;
-    $("#gatilho").innerHTML = `<span class="id">${esc(alvo.ticket_id)}</span> <span class="txt">${esc(alvo.texto)}</span>
-      <small>Posição ${pos(alvo) + 1} de ${l.length} na fila</small>`;
+    $("#gatilho").innerHTML = `<span class="etiqueta">Ticket em foco</span><span class="id">${esc(alvo.ticket_id)}</span> <span class="txt">${esc(alvo.texto)}</span>
+      <small>Posição ${l.indexOf(alvo) + 1} de ${l.length} na fila</small>`;
   }
 }
 
@@ -80,15 +90,15 @@ function renderResultado() {
   $("#k-auto").textContent = r.auto ?? auto.length;
   $("#k-humano").textContent = r.humano ?? hum.length;
   $("#k-crit").textContent = r.criticos ?? hum.filter((t) => t.critico).length;
-  $("#lista-humano").innerHTML = hum.map((t) => `<li>${card(t)}</li>`).join("") || '<li class="estado">Nenhum caso para a atendente.</li>';
-  $("#lista-auto").innerHTML = auto.map((t) => `<li>${card(t)}</li>`).join("") || '<li class="estado">Nenhuma resposta automática.</li>';
+  $("#lista-humano").innerHTML = hum.map((t, i) => `<li>${card(t, { i })}</li>`).join("") || '<li class="estado">Nenhum caso para a atendente.</li>';
+  $("#lista-auto").innerHTML = auto.map((t, i) => `<li>${card(t, { i })}</li>`).join("") || '<li class="estado">Nenhuma resposta automática.</li>';
   $("#saida-resultado").hidden = false;
   triado = true;
   renderBadge();
 }
 
 async function rodar() {
-  const b = $("#rodar"); b.disabled = true; b.textContent = "Triando…";
+  const b = $("#rodar"), bt = b.querySelector("span"); b.disabled = true; bt.textContent = "Triando…";
   $("#saida-resultado").hidden = true;
   const passos = [...document.querySelectorAll("#etapas li")];
   passos.forEach((p) => p.classList.remove("ativa", "feita"));
@@ -97,14 +107,14 @@ async function rodar() {
   const ETAPAS = ["leitor", "juiz", "redator", "auditor"];
   const total = dados.tickets.length;
   const cont = Object.fromEntries(ETAPAS.map((e) => [e, 0]));
-  const pinta = () => ETAPAS.forEach((e) => { $(`[data-c="${e}"]`).textContent = `${cont[e]}/${total}`; });
+  const pinta = () => ETAPAS.forEach((e) => { $(`[data-c="${e}"]`).textContent = `${cont[e]}/${total}`; $(`[data-b="${e}"]`).style.width = `${(cont[e] / total) * 100}%`; });
   pinta();
   const feed = $("#feed"), lista = $("#feed-lista"), agora = $("#feed-agora");
-  lista.innerHTML = ""; feed.hidden = false;
+  lista.innerHTML = ""; feed.hidden = false; feed.classList.remove("pronto");
   const resumo = (r) => {
     const s = r.saida || {};
     if (r.etapa === "leitor") return `intenção: ${esc(s.intencao)}${s.pedido_citado ? ` · pedido ${esc(s.pedido_citado)}` : ""}`;
-    if (r.etapa === "juiz") return `<span class="${s.acao === "escalar_humano" ? (s.critico ? "crit" : "esc") : "ok"}">${esc(ROTULO[s.acao] || s.acao)}</span> · ${esc((s.regras || []).join(", "))}`;
+    if (r.etapa === "juiz") return `<span class="${s.acao === "escalar_humano" ? ((s.regras || []).some((x) => x.includes("regra 6")) ? "manip" : s.critico ? "crit" : "esc") : "ok"}">${esc(ROTULO[s.acao] || s.acao)}</span> · ${esc((s.regras || []).join(", "))}`;
     if (r.etapa === "redator") return "resposta montada só com dados do pedido";
     return s.aprovado === false ? `<span class="crit">reprovado: ${esc((s.falhas || []).join(", "))}</span>` : `<span class="ok">aprovado</span>`;
   };
@@ -117,9 +127,9 @@ async function rodar() {
   }
   passos.forEach((p) => p.classList.remove("ativa"));
   passos.forEach((p) => p.classList.add("feita"));
-  agora.textContent = `${total} tickets passaram pelos 4 agentes · modo ${dados.modo}`;
+  agora.textContent = `${total} tickets passaram pelos 4 agentes · modo ${dados.modo}`; feed.classList.add("pronto");
   renderResultado();
-  b.disabled = false; b.textContent = "Rodar de novo";
+  b.disabled = false; bt.textContent = "Rodar de novo";
 }
 
 function renderAprovacao() {
@@ -127,14 +137,15 @@ function renderAprovacao() {
   const l = humanos();
   $("#lista-aprovacao").innerHTML = l.length ? l.map((t) => {
     const a = ap[t.ticket_id];
-    return `<li><div class="card ${t.critico ? "critico" : "humano"} ${a ? "aprovado" : ""}">
-      <span class="id">${esc(t.ticket_id)}</span><span class="txt">${esc(t.texto)}</span>
-      <span class="meta">${t.critico ? '<span class="tag crit">⚠ Crítico</span>' : ""}<span class="tag">${esc(t.categoria)}</span>
-        <span class="tag">${esc(t.evidencia?.motivo || "")}</span></span>
+    return `<li><div class="aprov-card ${tom(t)} ${a ? "aprovado" : ""}">
+      <span class="tk__topo"><span class="id">${esc(t.ticket_id)} · prioridade ${esc(t.prioridade)}</span></span>
+      <span class="txt">${esc(t.texto)}</span>
+      <span class="meta">${selos(t)}</span>
+      <span class="sub">Motivo: ${esc(t.evidencia?.motivo || "—")}</span>
+      <label><span class="etiqueta">Resposta sugerida</span><textarea rows="3" data-edit="${esc(t.ticket_id)}">${esc(a?.resposta ?? t.resposta)}</textarea></label>
       <div class="aprov">
-        <label style="width:100%">Resposta sugerida<textarea rows="2" data-edit="${esc(t.ticket_id)}">${esc(a?.resposta ?? t.resposta)}</textarea></label>
-        <button class="primario" data-aprovar="${esc(t.ticket_id)}">${a ? "Aprovado ✓" : "Aprovar"}</button>
-        <button class="secundario" data-abrir="${esc(t.ticket_id)}">Ver evidência</button>
+        <button class="btn ${a ? "btn--ok" : "btn--lima"}" data-aprovar="${esc(t.ticket_id)}">${a ? ICO("check") + " Aprovado" : "Aprovar"}</button>
+        <button class="btn btn--fantasma" data-abrir="${esc(t.ticket_id)}">Ver evidência</button>
       </div></div></li>`;
   }).join("") : '<li class="estado">Nenhum caso escalado. A fila está vazia.</li>';
 }
@@ -164,12 +175,12 @@ function abrirEvidencia(id) {
   $("#ev-titulo").textContent = `${t.ticket_id} · ${t.categoria}`;
   $("#ev-corpo").innerHTML = `<blockquote>${esc(t.texto)}</blockquote>
   <dl>
-    <dt>Decisão</dt><dd><strong>${esc(ROTULO[t.acao] || t.acao)}</strong>${t.critico ? ' <span class="tag crit">⚠ Crítico</span>' : ""}</dd>
-    <dt>Sinais do Leitor</dt><dd>${(ev.sinais || []).length ? ev.sinais.map((s) => `<span class="tag">${esc(s)}</span>`).join(" ") : "nenhum"}</dd>
+    <dt>Decisão</dt><dd><strong>${esc(ROTULO[t.acao] || t.acao)}</strong>${t.critico ? ` <span class="selo selo--bad">${ICO("alerta")}crítico</span>` : ""}</dd>
+    <dt>Sinais do Leitor</dt><dd>${(ev.sinais || []).length ? ev.sinais.map((s) => `<span class="selo selo--${(SINAL[s] || ["neutro"])[0]}">${esc(SINAL[s]?.[1] || s)}</span>`).join(" ") : "nenhum"}</dd>
     <dt>Leitor × rede</dt><dd>${esc(ev.leitor_vs_rede || "—")}</dd>
     <dt>Regra aplicada</dt><dd>${esc((ev.regras || []).join(", ") || "—")}</dd>
     <dt>Motivo</dt><dd>${esc(ev.motivo || "—")}</dd>
-    <dt>Auditor</dt><dd>${au.aprovado ? '<span class="ok">✓ aprovado</span>' : '<span class="falha">✗ reprovado</span>'}${(au.falhas || []).length ? ": " + au.falhas.map(esc).join("; ") : ""}</dd>
+    <dt>Auditor</dt><dd>${au.aprovado ? `<span class="selo selo--ok">${ICO("check")}aprovado</span>` : `<span class="selo selo--bad">reprovado</span>`}${(au.falhas || []).length ? ": " + au.falhas.map(esc).join("; ") : ""}</dd>
     <dt>Pedido</dt><dd>${p ? `${esc(p.pedido)} · ${esc(p.produto)} · personalizado: ${esc(p.personalizado)} · status <b>${esc(p.status)}</b> · pedido em ${esc(p.data_pedido)} · prazo ${esc(p.prazo_entrega)}`
       : t.pedido ? esc(t.pedido) : "nenhum pedido válido citado"}</dd>
     <dt>Resposta sugerida</dt><dd>${esc(t.resposta || "—")}</dd>
@@ -179,7 +190,7 @@ function abrirEvidencia(id) {
 
 function ir(tela) {
   if (!dados) return;
-  document.querySelectorAll(".abas button").forEach((b) => b.dataset.tela === tela ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  document.querySelectorAll(".passos button").forEach((b) => b.dataset.tela === tela ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
   document.querySelectorAll(".tela").forEach((s) => (s.hidden = s.id !== "tela-" + tela));
   if (tela === "aprovacao") renderAprovacao();
   if (tela === "log") renderLog();
