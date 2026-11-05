@@ -34,12 +34,13 @@
     <div class="linha-topo">
       <button id="rodar" class="primario">Rodar triagem</button>
       <ol class="etapas" id="etapas" aria-label="Etapas">
-        <li data-e="leitor"><b>Leitor</b><small>IA lê o texto</small></li>
-        <li data-e="juiz"><b>Juiz</b><small>regra decide</small></li>
-        <li data-e="redator"><b>Redator</b><small>monta resposta</small></li>
-        <li data-e="auditor"><b>Auditor</b><small>confere dados</small></li>
+        <li data-e="leitor"><b>Leitor</b><small>IA lê o texto</small><span class="cont" data-c="leitor">0/20</span></li>
+        <li data-e="juiz"><b>Juiz</b><small>regra decide</small><span class="cont" data-c="juiz">0/20</span></li>
+        <li data-e="redator"><b>Redator</b><small>monta resposta</small><span class="cont" data-c="redator">0/20</span></li>
+        <li data-e="auditor"><b>Auditor</b><small>confere dados</small><span class="cont" data-c="auditor">0/20</span></li>
       </ol>
     </div>
+    <div id="feed" class="feed" aria-live="polite" hidden><p id="feed-agora" class="feed-agora"></p><ol id="feed-lista"></ol></div>
     <div id="saida-resultado" hidden>
       <div class="contagem" aria-live="polite">
         <div class="kpi"><span id="k-auto" class="num">0</span><span>respondidos automaticamente</span></div>

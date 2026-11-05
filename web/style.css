@@ -83,3 +83,8 @@ blockquote{margin:8px 0;padding:8px 12px;border-left:3px solid var(--borda);back
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .gatilho{display:grid;gap:4px;padding:20px;margin-bottom:16px;background:var(--sup);border:1px solid var(--borda);border-left:6px solid var(--crit);border-radius:var(--raio);font-size:20px}
 .gatilho .id{font-weight:700;color:var(--crit)}.gatilho small{font-size:14px;color:var(--txt2)}
+.etapas .cont{font-size:12px;font-variant-numeric:tabular-nums;color:var(--txt2)}
+.feed{margin:12px 0;border:1px solid var(--borda);border-radius:var(--raio);background:var(--sup);padding:8px 12px}
+.feed-agora{margin:0 0 6px;font-weight:600}
+.feed ol{list-style:none;margin:0;padding:0;max-height:180px;overflow:auto;font:13px/1.5 ui-monospace,monospace;color:var(--txt2)}
+.feed li b{color:var(--txt)}.feed .esc{color:var(--hum)}.feed .crit{color:var(--crit)}.feed .ok{color:var(--auto)}

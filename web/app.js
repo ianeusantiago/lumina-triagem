@@ -92,12 +92,32 @@ async function rodar() {
   $("#saida-resultado").hidden = true;
   const passos = [...document.querySelectorAll("#etapas li")];
   passos.forEach((p) => p.classList.remove("ativa", "feita"));
-  const espera = matchMedia("(prefers-reduced-motion: reduce)").matches ? 120 : 650;
-  for (const p of passos) {
-    p.classList.add("ativa");
-    await new Promise((r) => setTimeout(r, espera));
-    p.classList.replace("ativa", "feita");
+  const reduz = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const espera = reduz ? 0 : 110;
+  const ETAPAS = ["leitor", "juiz", "redator", "auditor"];
+  const total = dados.tickets.length;
+  const cont = Object.fromEntries(ETAPAS.map((e) => [e, 0]));
+  const pinta = () => ETAPAS.forEach((e) => { $(`[data-c="${e}"]`).textContent = `${cont[e]}/${total}`; });
+  pinta();
+  const feed = $("#feed"), lista = $("#feed-lista"), agora = $("#feed-agora");
+  lista.innerHTML = ""; feed.hidden = false;
+  const resumo = (r) => {
+    const s = r.saida || {};
+    if (r.etapa === "leitor") return `intenção: ${esc(s.intencao)}${s.pedido_citado ? ` · pedido ${esc(s.pedido_citado)}` : ""}`;
+    if (r.etapa === "juiz") return `<span class="${s.acao === "escalar_humano" ? (s.critico ? "crit" : "esc") : "ok"}">${esc(ROTULO[s.acao] || s.acao)}</span> · ${esc((s.regras || []).join(", "))}`;
+    if (r.etapa === "redator") return "resposta montada só com dados do pedido";
+    return s.aprovado === false ? `<span class="crit">reprovado: ${esc((s.falhas || []).join(", "))}</span>` : `<span class="ok">aprovado</span>`;
+  };
+  for (const r of (dados.log || []).filter((x) => ETAPAS.includes(x.etapa))) {
+    passos.forEach((p) => p.classList.toggle("ativa", p.dataset.e === r.etapa));
+    cont[r.etapa]++; pinta();
+    agora.textContent = `${r.ticket_id} → ${r.etapa}`;
+    lista.insertAdjacentHTML("afterbegin", `<li><b>${esc(r.ticket_id)}</b> ${esc(r.etapa)}: ${resumo(r)}</li>`);
+    if (espera) await new Promise((ok) => setTimeout(ok, espera));
   }
+  passos.forEach((p) => p.classList.remove("ativa"));
+  passos.forEach((p) => p.classList.add("feita"));
+  agora.textContent = `${total} tickets passaram pelos 4 agentes · modo ${dados.modo}`;
   renderResultado();
   b.disabled = false; b.textContent = "Rodar de novo";
 }
