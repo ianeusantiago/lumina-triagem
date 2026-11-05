@@ -311,3 +311,10 @@ textarea[readonly]{background:var(--bg);color:var(--mudo)}
 kbd{font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--linha);border-bottom-width:2px;border-radius:6px;padding:1px 6px}
 .lista-atalhos{padding:18px 24px 24px;grid-template-columns:110px 1fr}
 @media (max-width:700px){.dica-atalhos{display:none}.progresso{grid-template-columns:auto 1fr}}
+
+.aviso-fila{display:grid;gap:8px;background:var(--card);border:1px solid var(--linha);border-radius:var(--raio-card);padding:14px 16px;font-size:14px;color:var(--texto)}
+.aviso-fila:empty{display:none}
+.aviso-fila p{margin:0}
+.aviso-fila__falta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px}
+.aviso-fila__falta span{flex:1;min-width:220px}
+.aviso-fila__ok{display:flex;gap:8px;align-items:center;color:var(--ok);font-weight:600}

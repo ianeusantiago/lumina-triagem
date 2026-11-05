@@ -295,6 +295,7 @@ function renderAprovacao() {
   $("#exportar").textContent = `Exportar resolvidos (${nRes})`;
   $("#exportar-corr").hidden = !nCorr;
   $("#exportar-corr").textContent = `Baixar correções (${nCorr})`;
+  renderAvisoFila(gs);
   $("#lista-aprovacao").innerHTML = gs.length ? gs.map((g) => {
     const t0 = g.tickets[0], a = ap[g.chave], enc = en[g.chave], [pc, pr] = rotuloPrioridade(t0), sug = areaSugerida(g.tickets);
     const ids = new Set(g.tickets.map((t) => t.ticket_id));
@@ -327,6 +328,22 @@ function renderAprovacao() {
              <button class="btn btn--fantasma" data-encaminhar="${esc(g.chave)}">Encaminhar</button></span>`}
       </div></article></li>`;
   }).join("") : `<li class="vazio">${triados.size ? "Nenhum caso para a atendente entre os tickets triados." : "Nenhum ticket triado ainda. Selecione tickets na Entrada e envie para a triagem."}</li>`;
+}
+
+/* Explica de onde vêm os casos da fila e o que ainda falta triar. */
+function renderAvisoFila(gs) {
+  const tri = triadosLista(), ab = abertos();
+  const nAuto = tri.filter((t) => t.acao === "responder_auto").length, nHum = tri.length - nAuto;
+  const porUrg = Object.keys(URG).map((u) => [u, ab.filter((t) => t.urgencia === u).length]).filter(([, n]) => n);
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  const partes = [];
+  if (tri.length) partes.push(`<p>Dos <b>${plural(tri.length, "ticket triado", "tickets triados")}</b>, ${nAuto ? `${plural(nAuto, "foi respondido", "foram respondidos")} automaticamente e não ${nAuto === 1 ? "entra" : "entram"} aqui.` : "nenhum foi respondido automaticamente."}
+    ${nHum ? `${plural(nHum, "veio", "vieram")} para você${gs.length < nHum ? `, agrupados em <b>${plural(gs.length, "caso", "casos")}</b> porque tickets do mesmo pedido viram um caso só` : ""}.` : "Nenhum precisou de atendente."}</p>`);
+  if (ab.length) partes.push(`<p class="aviso-fila__falta">${ICO("alerta")} <span>Ainda ${ab.length === 1 ? "falta" : "faltam"} <b>${plural(ab.length, "ticket", "tickets")}</b> na Entrada sem triagem
+    (${porUrg.map(([u, n]) => `${n} ${URG[u][1].toLowerCase()}`).join(", ")}). Os casos deles só aparecem aqui depois da triagem.</span>
+    <button class="btn btn--lima btn--p" data-ir-abertos>Triar os restantes</button></p>`);
+  else if (tri.length) partes.push(`<p class="aviso-fila__ok">${ICO("check")} Todos os tickets da Entrada já foram triados.</p>`);
+  $("#aviso-fila").innerHTML = partes.join("");
 }
 
 function focarCaso(i) {
@@ -470,11 +487,15 @@ function ir(tela) {
 }
 
 document.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
+  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-ir-abertos],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
   if (!el || el.disabled) return;
   if (el.dataset.tela || el.dataset.ir) ir(el.dataset.tela || el.dataset.ir);
   else if (el.dataset.abrir) abrirEvidencia(el.dataset.abrir);
   else if (el.dataset.triarUm) triar([el.dataset.triarUm]);
+  else if (el.dataset.irAbertos !== undefined) {
+    filtro = { urg: "", status: "abertos", busca: "" }; $("#busca").value = "";
+    $$("[data-status]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.status === "abertos")); ir("entrada");
+  }
   else if (el.dataset.aprovar) aprovar(el.dataset.aprovar);
   else if (el.dataset.encaminhar) encaminhar(el.dataset.encaminhar);
   else if (el.dataset.salvarCorr) salvarCorrecao(el.dataset.salvarCorr);
