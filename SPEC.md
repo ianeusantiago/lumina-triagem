@@ -61,12 +61,14 @@ Resultado: 11 auto, 9 humano.
 
 ## Premissas
 - P1: atraso vencido sem reclamação forte → `responder_auto` (a regra 1 só fala explicitamente do caso no prazo).
-- P2: "arte cortada" é defeito de produção; "cor diferente da arte" é ambíguo → humano.
+- P2: "arte cortada" é defeito de produção; "cor diferente da arte" é ambíguo → humano; idem "diferente do que pedi"/"não ficou como queria" sem defeito claro.
 - P3: injeção de instrução → categoria `outro` (não há categoria própria).
 - P4: sem catálogo, `duvida_produto` responde sem afirmar disponibilidade.
 - P5: pergunta de prazo de pedido → `atraso` (status de entrega), mesmo sem reclamação.
 - P6: quando ameaça jurídica e atraso coexistem, `reclamacao` vence (regra 5 tem prioridade).
 - P7: produto citado no ticket diferente do produto do pedido → `escalar_humano` (regra 8: não assumir qual dado está certo). Achado do `scripts/perfil.py`.
+- P8: cancelamento de não personalizado `em_transporte`/`entregue` → `escalar_humano` (regra 3 não cobre).
+- P9: troca de pedido ainda não entregue (status != `entregue`) → `escalar_humano`.
 - Ordem de prioridade do Juiz: manipulação > LGPD > jurídico/reclamação forte > cancelamento > troca > atraso > dúvida > outro.
 - `pedido` sai vazio se não existir no CSV, mesmo que citado.
 - Os testes escondidos checam `categoria`, `acao` e `pedido` com mais rigor que o texto de `resposta` (HIPÓTESE).
