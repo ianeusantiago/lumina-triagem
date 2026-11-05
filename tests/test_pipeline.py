@@ -127,3 +127,12 @@ def test_pre_triagem_criticos_do_gabarito_sao_urgentes():
     from pipeline.pre_triagem import pre_triar
     urg = {t["ticket_id"] for t in pre_triar(carregar_tickets()) if t["urgencia"] == "urgente"}
     assert {"T06", "T08", "T10", "T18"} <= urg
+
+
+def test_auditor_do_site_espelha_o_python():
+    import re
+    from pathlib import Path
+    from pipeline.auditor import PROIBIDO
+    js = (Path(__file__).resolve().parents[1] / "web/app.js").read_text(encoding="utf-8")
+    m = re.search(r'const PROIBIDO = "([^"]+)"', js)
+    assert m and m.group(1) == PROIBIDO

@@ -251,3 +251,33 @@ button.tk:hover{transform:none}
   .tabela-entrada .c-acao{grid-column:2/-1;text-align:left}
 }
 @media (max-width:600px){.barra-sel{flex-wrap:wrap;padding:12px}.barra-sel #n-sel{flex-basis:100%}.barra-sel #triar-sel{flex:1;justify-content:center}}
+
+/* Fila por pedido, auditoria da edição, rodapé */
+.link{background:none;border:0;padding:0;color:var(--azul-2);font-weight:600;text-decoration:underline;cursor:pointer;font-size:inherit}
+.rodape{margin-top:32px;padding-top:16px;border-top:1px solid var(--linha);font-size:13px;color:var(--mudo)}
+.progresso{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.progresso:has(#progresso:empty){display:none}
+.progresso .barra i{background:var(--ok)}
+.aprov-cab{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.aprov-cab .id{margin-left:auto}
+.pedido{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--texto)}
+.pedido--vazio{color:var(--mudo)}
+.msgs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.msg{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid var(--linha)}
+.msg:hover,.msg:focus-visible{background:var(--bg)}
+.msg:focus-visible{outline:3px solid var(--azul-2)}
+.msg .sub{font-size:12.5px}
+.outros{font-size:13px;color:var(--mudo);margin:0}
+.auditoria{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:600;border-radius:10px;padding:8px 12px}
+.auditoria .ic{margin-top:2px;width:16px;height:16px}
+.auditoria.ok{background:var(--ok-bg);color:var(--ok)}
+.auditoria.falha{background:var(--bad-bg);color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+textarea[readonly]{background:var(--bg);color:var(--mudo)}
+.linha-auto{display:flex;gap:10px;align-items:center;border-top:1px solid var(--linha);padding-top:6px}
+.linha-auto .linha-res{flex:1;min-width:0}
+.linha-res .resp{font-size:13px;color:var(--mudo)}
+.ev-log summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--azul-2)}
+.ev-log ol{margin:8px 0 0;padding-left:18px;font-size:13px;display:grid;gap:4px}
+.ev-log .crit{color:var(--bad)}.ev-log .ok{color:var(--ok)}.ev-log .esc{color:var(--info)}.ev-log .manip{color:var(--warn)}
+@media (max-width:700px){.linha-auto{flex-direction:column;align-items:stretch}}

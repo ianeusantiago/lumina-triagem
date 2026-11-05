@@ -30,7 +30,6 @@
     <button data-tela="entrada" aria-current="page"><span class="passo__n">01</span>Entrada</button>
     <button data-tela="resultado"><span class="passo__n">02</span>Triagem</button>
     <button data-tela="aprovacao"><span class="passo__n">03</span>Fila da atendente <span id="badge-fila" class="badge"></span></button>
-    <button data-tela="log"><span class="passo__n">04</span>Log</button>
   </nav>
 </header>
 
@@ -39,8 +38,7 @@
 
   <section id="tela-entrada" class="tela">
     <div class="pg-cab">
-      <div><h1 class="pg-titulo">Entrada</h1><p class="sub">Tickets abertos, pré-classificados por urgência com regras em código (sem IA). Selecione e envie para a triagem completa.</p></div>
-      <button id="reiniciar" class="btn btn--fantasma btn--p">Reiniciar demo</button>
+      <div><h1 class="pg-titulo">Entrada</h1><p class="sub">Tickets abertos por urgência. Selecione um grupo ou tickets avulsos e envie para a triagem.</p></div>
     </div>
     <div id="grupos" class="grupos"></div>
     <div class="ferramentas">
@@ -85,31 +83,24 @@
         <div class="card kpi kpi--crit"><span class="etiqueta">Críticos</span><span id="k-crit" class="num">0</span><small>jurídico, Procon, LGPD, manipulação</small></div>
         <div class="card kpi"><span class="etiqueta">Ainda abertos</span><span id="k-abertos" class="num">0</span><small>aguardando triagem na entrada</small></div>
       </div>
-      <div class="colunas">
-        <div class="card coluna"><div class="coluna__cab"><span class="etiqueta">Para a atendente</span><button class="btn btn--pink btn--p" data-ir="aprovacao">Abrir fila <svg class="ic"><use href="#i-seta"/></svg></button></div><ol id="lista-humano" class="lista"></ol></div>
-        <div class="card coluna"><div class="coluna__cab"><span class="etiqueta">Resposta automática</span></div><ol id="lista-auto" class="lista"></ol></div>
+      <div class="card coluna">
+        <div class="coluna__cab"><span class="etiqueta">Respostas automáticas deste lote</span><button class="btn btn--pink btn--p" data-ir="aprovacao">Abrir fila da atendente <svg class="ic"><use href="#i-seta"/></svg></button></div>
+        <p class="sub">Confira antes de seguir. Se alguma não estiver certa, passe para a atendente.</p>
+        <ol id="lista-auto" class="lista"></ol>
       </div>
     </div>
   </section>
 
   <section id="tela-aprovacao" class="tela" hidden>
     <div class="pg-cab">
-      <div><h1 class="pg-titulo">Fila da atendente</h1><p class="sub">Casos escalados, ordenados por prioridade. A aprovação fica salva só neste navegador.</p></div>
-      <button id="limpar" class="btn btn--fantasma">Desfazer aprovações</button>
+      <div><h1 class="pg-titulo">Fila da atendente</h1><p class="sub">Um card por pedido, críticos primeiro. O Auditor confere também o texto que você editar.</p></div>
+      <button id="exportar" class="btn btn--fantasma btn--p" disabled>Exportar aprovados (0)</button>
     </div>
+    <div class="progresso"><span id="progresso" class="etiqueta"></span><span class="barra"><i id="progresso-barra"></i></span></div>
     <ol id="lista-aprovacao" class="lista lista--aprov"></ol>
   </section>
 
-  <section id="tela-log" class="tela" hidden>
-    <div class="pg-cab">
-      <div><h1 class="pg-titulo">Log da execução</h1><p class="sub" id="log-meta"></p></div>
-      <label class="filtro"><span class="etiqueta">Ticket</span><select id="filtro-log"><option value="">Todos</option></select></label>
-    </div>
-    <div class="card tabela-wrap"><table>
-      <thead><tr><th>Ticket</th><th>Etapa</th><th>Entrada</th><th>Saída</th><th class="n">ms</th><th>Versão</th></tr></thead>
-      <tbody id="corpo-log"></tbody>
-    </table></div>
-  </section>
+  <footer class="rodape"><button id="reiniciar" class="link">Reiniciar demonstração</button></footer>
 </main>
 
 <dialog id="evidencia" aria-labelledby="ev-titulo">
