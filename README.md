@@ -24,16 +24,25 @@ Princípio: **a IA interpreta, a regra decide, o auditor confere.**
 ## Estrutura
 ```
 data/       tickets.csv, pedidos.csv, regras.md (fonte do desafio)
-docs/       contexto.md (desafio, evento, critérios, narrativa)
-SPEC.md     especificação + roteiro da demo de 90 s
-CLAUDE.md   regras de trabalho para a IA neste projeto
+scripts/    perfil.py (perfil dos dados)
+evals/      casos.csv (15 casos) — agente dados
+pipeline/   orquestrador + agentes — agente ia
+prompts/    prompts do modelo — agente ia
+schemas/    contratos Pydantic/JSON — agente ia
+fallback/   respostas reais salvas para a demo — agente ia
+web/        telas da demo — agente interface
+entrega/    slides PDF, formulário, rascunho do relatório — agente produto-pitch
+docs/       contexto, perfil-dados, roteiro-demo, verificacao, orquestrador, prompts-fluxo
+SPEC.md     especificação
+CLAUDE.md   regras curtas para a IA
+ERROS.md    erros da IA e correções
 ```
 
 ## Saída
 `saida.csv`: `ticket_id,categoria,acao,pedido,resposta`
 
 ## Stack
-Python 3, Claude API (só no Leitor), CSV de entrada/saída, tela de fila estática (link público).
+Python 3.12, Claude API (só no Leitor), Pydantic, pytest, HTML estático em /web (link público).
 
 ## Status
 Especificação. Código ainda não escrito.
