@@ -30,6 +30,7 @@
     <button data-tela="entrada" aria-current="page"><span class="passo__n">01</span>Entrada</button>
     <button data-tela="resultado"><span class="passo__n">02</span>Triagem</button>
     <button data-tela="aprovacao"><span class="passo__n">03</span>Fila da atendente <span id="badge-fila" class="badge"></span></button>
+    <button data-tela="encaminhados"><span class="passo__n">04</span>Encaminhados <span id="badge-enc" class="badge badge--neutro"></span></button>
   </nav>
 </header>
 
@@ -86,6 +87,7 @@
       <div class="card coluna">
         <div class="coluna__cab"><span class="etiqueta">Respostas automáticas deste lote</span><button class="btn btn--pink btn--p" data-ir="aprovacao">Abrir fila da atendente <svg class="ic"><use href="#i-seta"/></svg></button></div>
         <p class="sub">Confira antes de seguir. Se alguma não estiver certa, passe para a atendente.</p>
+        <div id="filtro-auto" class="segmento segmento--chips" role="group" aria-label="Filtrar por categoria"></div>
         <ol id="lista-auto" class="lista"></ol>
       </div>
     </div>
@@ -99,7 +101,17 @@
     <div id="aviso-fila" class="aviso-fila" role="status"></div>
     <div class="progresso"><span id="progresso" class="etiqueta"></span><span class="barra"><i id="progresso-barra"></i></span>
       <button class="link dica-atalhos" onclick="document.getElementById('atalhos').showModal()">Atalhos: J/K navegar · A aprovar · F encaminhar · E evidência · ?</button></div>
+    <div id="filtros-fila" class="ferramentas" hidden></div>
     <ol id="lista-aprovacao" class="lista lista--aprov"></ol>
+  </section>
+
+  <section id="tela-encaminhados" class="tela" hidden>
+    <div class="pg-cab">
+      <div><h1 class="pg-titulo">Encaminhados</h1><p class="sub">Casos que você passou para outra área. Desfazer devolve o caso para a sua fila.</p></div>
+      <button class="btn btn--fantasma btn--p" data-ir="aprovacao">Voltar à fila</button>
+    </div>
+    <div id="resumo-enc" class="resumo-enc"></div>
+    <div id="lista-enc" class="lista lista--enc"></div>
   </section>
 
   <footer class="rodape"><button id="reiniciar" class="link">Reiniciar demonstração</button></footer>

@@ -4,7 +4,7 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ROTULO = { responder_auto: "resposta automática", escalar_humano: "atendente" };
 const URG = { urgente: ["bad", "Urgente"], media: ["warn", "Média"], baixa: ["info", "Baixa"] };
-const CH = { hist: "lumina-historico", aprov: "lumina-aprovacoes", triados: "lumina-triados", override: "lumina-override", encam: "lumina-encaminhados", corr: "lumina-correcoes" };
+const CH = { notas: "lumina-notas", hist: "lumina-historico", aprov: "lumina-aprovacoes", triados: "lumina-triados", override: "lumina-override", encam: "lumina-encaminhados", corr: "lumina-correcoes" };
 const AREAS = { juridico: "Jurídico", privacidade: "Privacidade (encarregado LGPD)", supervisao: "Supervisão do atendimento", logistica: "Logística", producao: "Produção" };
 const CATEGORIAS = ["atraso", "troca", "cancelamento", "duvida_produto", "reclamacao", "lgpd", "outro"];
 const PAGINA = 200;
@@ -20,6 +20,8 @@ const lerEncam = () => lerJSON(CH.encam, {});
 const lerCorr = () => lerJSON(CH.corr, {});
 const rascunhos = new Map();
 let focoFila = 0;
+let filaFiltro = { tipo: "", sit: "todos" }, autoCat = "";
+const lerNotas = () => lerJSON(CH.notas, {});
 
 /* Histórico das ações da atendente (sem login: fica neste navegador). */
 function registrar(acao, tickets, detalhe = "") {
@@ -201,7 +203,8 @@ function renderEntrada() {
       <td class="c-mot">${esc(t.motivo)}</td>
       <td class="c-txt">${esc(t.texto)}${n > 1 ? ` <span class="selo selo--warn" title="Há outros tickets citando o mesmo pedido">pedido ${esc(t.pedido_citado)} · ${n} tickets</span>` : ""}</td>
       <td class="c-acao">${feito
-        ? `<button class="btn btn--fantasma btn--p" data-abrir="${esc(t.ticket_id)}">${r?.acao === "responder_auto" ? "Respondido" : "Na fila"}</button>`
+        ? `<button class="btn btn--fantasma btn--p" data-abrir="${esc(t.ticket_id)}">${r?.acao === "responder_auto" ? "Respondido" : "Na fila"}</button>
+           <button class="link link--p" data-devolver="${esc(t.ticket_id)}" aria-label="Devolver ${esc(t.ticket_id)} para a entrada">devolver</button>`
         : `<button class="btn btn--lima btn--p" data-triar-um="${esc(t.ticket_id)}">Triar</button>`}</td></tr>`;
   }).join("") || `<tr><td colspan="6" class="vazio">${filtro.status === "abertos" && !abertos().length ? "Todos os tickets já foram triados." : "Nenhum ticket com esses filtros."}</td></tr>`;
   $("#mais").hidden = l.length <= limite;
@@ -265,7 +268,11 @@ function renderResultado() {
   $("#k-humano").textContent = hum.length;
   $("#k-crit").textContent = hum.filter((t) => t.critico).length;
   $("#k-abertos").textContent = abertos().length;
-  $("#lista-auto").innerHTML = auto.map((t) => `<li class="linha-auto">
+  const cats = [...new Set(auto.map((t) => t.categoria))].sort();
+  if (autoCat && !cats.includes(autoCat)) autoCat = "";
+  $("#filtro-auto").innerHTML = cats.length > 1 ? [["", `Todas (${auto.length})`], ...cats.map((c) => [c, `${c} (${auto.filter((t) => t.categoria === c).length})`])]
+    .map(([v, txt]) => `<button data-auto-cat="${esc(v)}" aria-pressed="${autoCat === v}">${esc(txt)}</button>`).join("") : "";
+  $("#lista-auto").innerHTML = auto.filter((t) => !autoCat || t.categoria === autoCat).map((t) => `<li class="linha-auto">
       <button class="linha-res auto" data-abrir="${esc(t.ticket_id)}"><span class="id">${esc(t.ticket_id)}</span>
         <span class="txt">${esc(t.texto)}</span><span class="resp">${esc(t.resposta)}</span></button>
       <button class="btn btn--fantasma btn--p" data-puxar="${esc(t.ticket_id)}">Passar para atendente</button></li>`).join("")
@@ -296,7 +303,17 @@ function renderAprovacao() {
   $("#exportar-corr").hidden = !nCorr;
   $("#exportar-corr").textContent = `Baixar correções (${nCorr})`;
   renderAvisoFila(gs);
-  $("#lista-aprovacao").innerHTML = gs.length ? gs.map((g) => {
+  const tipos = [...new Set(gs.map((g) => rotuloPrioridade(g.tickets[0])[1]))];
+  if (filaFiltro.tipo && !tipos.includes(filaFiltro.tipo)) filaFiltro.tipo = "";
+  const resolvido = (g) => !!(ap[g.chave] || en[g.chave]);
+  const vis = gs.filter((g) => (!filaFiltro.tipo || rotuloPrioridade(g.tickets[0])[1] === filaFiltro.tipo)
+    && (filaFiltro.sit === "todos" || (filaFiltro.sit === "resolvidos") === resolvido(g)));
+  $("#filtros-fila").hidden = !gs.length;
+  $("#filtros-fila").innerHTML = `<div class="segmento" role="group" aria-label="Tipo de caso">${[["", `Todos os tipos (${gs.length})`], ...tipos.map((t) => [t, `${t} (${gs.filter((g) => rotuloPrioridade(g.tickets[0])[1] === t).length})`])]
+      .map(([v, txt]) => `<button data-fila-tipo="${esc(v)}" aria-pressed="${filaFiltro.tipo === v}">${esc(txt)}</button>`).join("")}</div>
+    <div class="segmento" role="group" aria-label="Situação">${[["todos", "Todos"], ["pendentes", `Pendentes (${gs.length - feitos})`], ["resolvidos", `Resolvidos (${feitos})`]]
+      .map(([v, txt]) => `<button data-fila-sit="${v}" aria-pressed="${filaFiltro.sit === v}">${txt}</button>`).join("")}</div>`;
+  $("#lista-aprovacao").innerHTML = vis.length ? vis.map((g) => {
     const t0 = g.tickets[0], a = ap[g.chave], enc = en[g.chave], [pc, pr] = rotuloPrioridade(t0), sug = areaSugerida(g.tickets);
     const ids = new Set(g.tickets.map((t) => t.ticket_id));
     const outros = t0.pedido_dados ? entrada.filter((e) => e.pedido_citado === t0.pedido && !ids.has(e.ticket_id)) : [];
@@ -319,6 +336,7 @@ function renderAprovacao() {
         <textarea rows="3" data-edit="${esc(g.chave)}" ${a ? "readonly" : ""}>${esc(resp)}</textarea></label>
       <div class="auditoria ${falhas.length ? "falha" : "ok"}" data-aud="${esc(g.chave)}">${falhas.length
         ? `${ICO("alerta")} Auditor bloqueou: ${falhas.map(esc).join("; ")}` : `${ICO("check")} Auditor: texto confere com os dados`}</div>
+      ${blocoNota(g)}
       <div class="aprov">${enc
         ? `<span class="selo selo--ok">${ICO("check")}Encaminhado para ${esc(AREAS[enc.area])}</span><button class="link" data-encaminhar="${esc(g.chave)}">desfazer</button>`
         : a ? `<button class="btn btn--ok" data-aprovar="${esc(g.chave)}">${ICO("check")} Aprovado · desfazer</button>`
@@ -327,7 +345,7 @@ function renderAprovacao() {
              <select id="area-${esc(g.chave)}" data-area="${esc(g.chave)}">${Object.entries(AREAS).map(([k, v]) => `<option value="${k}" ${k === sug ? "selected" : ""}>${esc(v)}${k === sug ? " (sugerida)" : ""}</option>`).join("")}</select>
              <button class="btn btn--fantasma" data-encaminhar="${esc(g.chave)}">Encaminhar</button></span>`}
       </div></article></li>`;
-  }).join("") : `<li class="vazio">${triados.size ? "Nenhum caso para a atendente entre os tickets triados." : "Nenhum ticket triado ainda. Selecione tickets na Entrada e envie para a triagem."}</li>`;
+  }).join("") : gs.length ? '<li class="vazio">Nenhum caso com esses filtros.</li>' : `<li class="vazio">${triados.size ? "Nenhum caso para a atendente entre os tickets triados." : "Nenhum ticket triado ainda. Selecione tickets na Entrada e envie para a triagem."}</li>`;
 }
 
 /* Explica de onde vêm os casos da fila e o que ainda falta triar. */
@@ -344,6 +362,22 @@ function renderAvisoFila(gs) {
     <button class="btn btn--lima btn--p" data-ir-abertos>Triar os restantes</button></p>`);
   else if (tri.length) partes.push(`<p class="aviso-fila__ok">${ICO("check")} Todos os tickets da Entrada já foram triados.</p>`);
   $("#aviso-fila").innerHTML = partes.join("");
+}
+
+function blocoNota(g) {
+  const n = lerNotas()[g.chave];
+  return `<details class="nota" ${n ? "open" : ""}><summary>Nota interna${n ? ` · salva ${horaBR(n.em)}` : ""}</summary>
+    <textarea rows="2" data-nota="${esc(g.chave)}" placeholder="Só para a equipe, não vai para o cliente. Ex.: liguei, aguardando retorno">${esc(n?.texto ?? "")}</textarea></details>`;
+}
+
+function salvarNota(ta) {
+  const chave = ta.dataset.nota, g = gruposFila().find((x) => x.chave === chave), notas = lerNotas(), texto = ta.value.trim();
+  if ((notas[chave]?.texto ?? "") === texto) return;
+  if (texto) notas[chave] = { texto, em: new Date().toISOString() }; else delete notas[chave];
+  gravarJSON(CH.notas, notas);
+  registrar(texto ? "nota interna" : "nota interna apagada", g ? g.tickets.map((t) => t.ticket_id) : [], texto);
+  const sum = ta.closest("details").querySelector("summary");
+  sum.textContent = texto ? `Nota interna · salva ${horaBR(notas[chave].em)}` : "Nota interna";
 }
 
 function focarCaso(i) {
@@ -386,7 +420,7 @@ function encaminhar(chave) {
     const e = en[chave];
     registrar("encaminhado", e.tickets, AREAS[e.area] + (e.area !== e.sugerida ? ` (sugestão era ${AREAS[e.sugerida]})` : ""));
   }
-  gravarJSON(CH.encam, en); renderAprovacao(); renderBadge();
+  gravarJSON(CH.encam, en); renderAprovacao(); renderBadge(); if (!$("#tela-encaminhados").hidden) renderEncaminhados();
 }
 
 function csvBaixar(linhas, nome) {
@@ -397,9 +431,10 @@ function csvBaixar(linhas, nome) {
 }
 
 function exportar() {
-  const linhas = [["ticket_id", "pedido", "desfecho", "area", "resposta_final", "editada_pela_atendente", "registrado_em"]];
-  for (const a of Object.values(lerAprov())) for (const id of a.tickets) linhas.push([id, a.pedido, "resposta_aprovada", "", a.resposta, a.editada ? "sim" : "nao", a.em]);
-  for (const e of Object.values(lerEncam())) for (const id of e.tickets) linhas.push([id, e.pedido, "encaminhado", AREAS[e.area], "", "", e.em]);
+  const notas = lerNotas();
+  const linhas = [["ticket_id", "pedido", "desfecho", "area", "resposta_final", "editada_pela_atendente", "nota_interna", "registrado_em"]];
+  for (const [k, a] of Object.entries(lerAprov())) for (const id of a.tickets) linhas.push([id, a.pedido, "resposta_aprovada", "", a.resposta, a.editada ? "sim" : "nao", notas[k]?.texto ?? "", a.em]);
+  for (const [k, e] of Object.entries(lerEncam())) for (const id of e.tickets) linhas.push([id, e.pedido, "encaminhado", AREAS[e.area], "", "", notas[k]?.texto ?? "", e.em]);
   csvBaixar(linhas, `resolvidos-${dados.hoje}.csv`);
 }
 
@@ -438,10 +473,31 @@ function blocoCorrecao(t) {
     <button class="btn btn--lima btn--p" data-salvar-corr="${esc(t.ticket_id)}">Salvar correção</button></details>`;
 }
 
+function renderEncaminhados() {
+  const en = lerEncam(), notas = lerNotas(), itens = Object.entries(en);
+  $("#resumo-enc").innerHTML = itens.length ? Object.entries(AREAS).map(([k, v]) => {
+    const n = itens.filter(([, e]) => e.area === k).length;
+    return `<div class="card mini ${n ? "" : "mini--vazio"}"><span class="etiqueta">${esc(v)}</span><b>${n}</b></div>`;
+  }).join("") : "";
+  $("#lista-enc").innerHTML = itens.length ? Object.entries(AREAS).filter(([k]) => itens.some(([, e]) => e.area === k)).map(([k, v]) =>
+    `<section class="card enc-area"><h2 class="enc-titulo">${esc(v)} <span class="badge">${itens.filter(([, e]) => e.area === k).length}</span></h2><ul class="enc-lista">${
+      itens.filter(([, e]) => e.area === k).sort((a, b) => a[1].em.localeCompare(b[1].em)).map(([chave, e]) => `<li>
+        <div class="enc-info"><span class="enc-linha"><b>${e.tickets.map(esc).join(" · ")}</b> · ${e.pedido ? `pedido ${esc(e.pedido)}` : "sem pedido"} · <span class="id">encaminhado ${horaBR(e.em)}</span></span>
+          ${e.sugerida && e.sugerida !== e.area ? `<span class="selo selo--neutro">sugestão era ${esc(AREAS[e.sugerida])}</span>` : ""}
+          <span class="txt">${esc(porId.get(e.tickets[0])?.texto ?? "")}</span>
+          ${notas[chave] ? `<span class="sub">Nota: ${esc(notas[chave].texto)}</span>` : ""}</div>
+        <div class="enc-acoes"><button class="btn btn--fantasma btn--p" data-abrir="${esc(e.tickets[0])}">Evidência</button>
+          <button class="btn btn--fantasma btn--p" data-encaminhar="${esc(chave)}">Desfazer</button></div></li>`).join("")}</ul></section>`).join("")
+    : '<li class="vazio card">Nenhum caso encaminhado ainda. Na Fila da atendente, escolha a área e clique em Encaminhar (ou tecle F).</li>';
+}
+
 function renderBadge() {
   const ap = lerAprov(), en = lerEncam(), pend = gruposFila().filter((g) => !ap[g.chave] && !en[g.chave]).length;
   $("#badge-fila").textContent = pend || "";
   $("#badge-fila").setAttribute("aria-label", pend + " casos pendentes");
+  const nEnc = Object.keys(lerEncam()).length;
+  $("#badge-enc").textContent = nEnc || "";
+  $("#badge-enc").setAttribute("aria-label", nEnc + " casos encaminhados");
 }
 
 /* ---------- Evidência (com o log do ticket) ---------- */
@@ -462,6 +518,7 @@ function abrirEvidencia(id) {
   </dl>
   ${blocoCorrecao(t0)}
   ${blocoHistorico(id)}
+  ${triados.has(id) ? `<p class="devolver">Triado por engano? <button class="link" data-devolver="${esc(id)}">Devolver para a entrada</button></p>` : ""}
   <details class="ev-log"><summary>Passo a passo dos agentes (${log.length} registros)</summary>
     <ol>${log.map((r) => `<li><b>${esc(r.etapa)}</b> ${["leitor", "juiz", "redator", "auditor"].includes(r.etapa) ? resumoLog(r) : esc(typeof r.saida === "object" ? JSON.stringify(r.saida) : r.saida)} <span class="id">${esc(r.ms)} ms</span></li>`).join("")}</ol>
   </details>`;
@@ -475,6 +532,23 @@ function blocoHistorico(id) {
     `<li><span class="id">${horaBR(x.em)}</span> <b>${esc(x.acao)}</b>${x.detalhe ? ` · ${esc(x.detalhe)}` : ""}</li>`).join("")}</ol></div>`;
 }
 
+/* Desfaz a triagem de um ticket e o que dependia dela (aprovação, encaminhamento, revisão, correção). */
+function devolver(id) {
+  if (!confirm(`Devolver ${id} para a entrada? A aprovação ou o encaminhamento do caso dele também serão desfeitos.`)) return;
+  for (const ch of [CH.aprov, CH.encam]) {
+    const m = lerJSON(ch, {});
+    for (const [k, v] of Object.entries(m)) if (v.tickets.includes(id)) delete m[k];
+    gravarJSON(ch, m);
+  }
+  for (const ch of [CH.override, CH.corr]) { const m = lerJSON(ch, {}); delete m[id]; gravarJSON(ch, m); }
+  triados.delete(id); salvarTriados();
+  registrar("devolvido para a entrada", [id]);
+  if ($("#evidencia").open) $("#evidencia").close();
+  renderBadge();
+  const atual = $$(".tela").find((x) => !x.hidden)?.id.replace("tela-", "") || "entrada";
+  ir(atual);
+}
+
 function ir(tela) {
   if (!dados) return;
   $$(".passos button").forEach((b) => b.dataset.tela === tela ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
@@ -482,12 +556,13 @@ function ir(tela) {
   if (tela === "entrada") renderEntrada();
   if (tela === "resultado") renderResultado();
   if (tela === "aprovacao") { renderAprovacao(); setTimeout(() => focarCaso(focoFila), 0); }
+  if (tela === "encaminhados") renderEncaminhados();
   history.replaceState(null, "", location.search + "#" + tela);
   $("#principal").focus({ preventScroll: true });
 }
 
 document.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-ir-abertos],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
+  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-ir-abertos],[data-fila-tipo],[data-fila-sit],[data-auto-cat],[data-devolver],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
   if (!el || el.disabled) return;
   if (el.dataset.tela || el.dataset.ir) ir(el.dataset.tela || el.dataset.ir);
   else if (el.dataset.abrir) abrirEvidencia(el.dataset.abrir);
@@ -496,6 +571,10 @@ document.addEventListener("click", (e) => {
     filtro = { urg: "", status: "abertos", busca: "" }; $("#busca").value = "";
     $$("[data-status]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.status === "abertos")); ir("entrada");
   }
+  else if (el.dataset.filaTipo !== undefined) { filaFiltro.tipo = el.dataset.filaTipo; focoFila = 0; renderAprovacao(); }
+  else if (el.dataset.filaSit) { filaFiltro.sit = el.dataset.filaSit; focoFila = 0; renderAprovacao(); }
+  else if (el.dataset.autoCat !== undefined) { autoCat = el.dataset.autoCat; renderResultado(); }
+  else if (el.dataset.devolver) devolver(el.dataset.devolver);
   else if (el.dataset.aprovar) aprovar(el.dataset.aprovar);
   else if (el.dataset.encaminhar) encaminhar(el.dataset.encaminhar);
   else if (el.dataset.salvarCorr) salvarCorrecao(el.dataset.salvarCorr);
@@ -511,8 +590,8 @@ document.addEventListener("click", (e) => {
   else if (el.id === "mais") { limite += PAGINA; renderEntrada(); }
   else if (el.id === "exportar") exportar();
   else if (el.id === "reiniciar") {
-    if (!confirm("Reiniciar a demonstração? Triagens, aprovações, encaminhamentos e correções deste navegador serão apagadas.")) return;
-    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {}); gravarJSON(CH.encam, {}); gravarJSON(CH.corr, {}); gravarJSON(CH.hist, []); rascunhos.clear();
+    if (!confirm("Reiniciar a demonstração? Triagens, aprovações, encaminhamentos, notas e correções deste navegador serão apagadas.")) return;
+    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {}); gravarJSON(CH.encam, {}); gravarJSON(CH.corr, {}); gravarJSON(CH.hist, []); gravarJSON(CH.notas, {}); rascunhos.clear();
     renderBadge(); ir("entrada");
   } else if (el.classList.contains("fechar")) el.closest("dialog").close();
 });
@@ -526,6 +605,7 @@ document.addEventListener("change", (e) => {
     if (c.value !== "") registrar("modelo de resposta usado", g.tickets.map((t) => t.ticket_id), c.options[c.selectedIndex].text);
     return;
   }
+  if (c.dataset.nota !== undefined) { salvarNota(c); return; }
   if (c.dataset.marcar) { c.checked ? sel.add(c.dataset.marcar) : sel.delete(c.dataset.marcar); renderGrupos(); renderBarra(); }
   else if (c.dataset.marcarGrupo) {
     entrada.filter((t) => t.urgencia === c.dataset.marcarGrupo && !triados.has(t.ticket_id))
@@ -565,5 +645,5 @@ carregar().then(() => {
   if (foco && !triados.has(foco)) sel.add(foco);
   renderBadge();
   const t = location.hash.slice(1);
-  ir(["entrada", "resultado", "aprovacao"].includes(t) ? t : "entrada");
+  ir(["entrada", "resultado", "aprovacao", "encaminhados"].includes(t) ? t : "entrada");
 });
