@@ -28,11 +28,11 @@ def decidir(leitura, pedidos, hoje: date, divergencias=()):
     it = leitura.intencao
 
     if s.injecao:
-        return _esc("outro", ped, "regra 6 / P3", "instrução embutida no ticket", 0, True)
+        return _esc("outro", ped, "regra 6 / P3", "instrução embutida no ticket", 2, True)
     if s.lgpd or it == "lgpd":
         return _esc("lgpd", ped, "regra 5 (LGPD)", "pedido de dados/exclusão (LGPD)", 1, True)
     if s.juridico or it == "reclamacao":
-        return _esc("reclamacao", ped, "regra 5 / P6", "ameaça jurídica/Procon ou reclamação forte", 2, True)
+        return _esc("reclamacao", ped, "regra 5 / P6", "ameaça jurídica/Procon ou reclamação forte", 0, True)
     if it == "desconhecida":
         return _esc("outro", ped, "SPEC etapa 1", "intenção desconhecida pelo Leitor")
 
