@@ -10,6 +10,7 @@ from .dados import RAIZ, carregar_pedidos, carregar_tickets
 from .leitor import Leitor
 from .modelos import Resultado, Resumo
 from .orquestrador import processar
+from .pre_triagem import pre_triar
 
 
 def executar(hoje, modo=None, tickets=None):
@@ -49,9 +50,12 @@ def main():
     )
     (RAIZ / "web/dados").mkdir(parents=True, exist_ok=True)
     (RAIZ / "web/dados/resultado.json").write_text(resultado.model_dump_json(indent=1), encoding="utf-8")
+    entrada = {"gerado_em": resultado.gerado_em, "hoje": str(hoje), "regra": "pre_triagem (código, sem IA)",
+               "tickets": pre_triar(carregar_tickets())}
+    (RAIZ / "web/dados/entrada.json").write_text(json.dumps(entrada, ensure_ascii=False, indent=1), encoding="utf-8")
     s = resultado.resumo
     print(f"modo={modo} hoje={hoje} total={s.total} auto={s.auto} humano={s.humano} criticos={s.criticos}")
-    print("gerado: saida.csv, saida/log.jsonl, web/dados/resultado.json")
+    print("gerado: saida.csv, saida/log.jsonl, web/dados/resultado.json, web/dados/entrada.json")
 
 
 if __name__ == "__main__":

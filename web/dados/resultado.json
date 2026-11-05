@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-11-05T10:10:43",
+ "gerado_em": "2026-11-05T10:42:14",
  "hoje": "2026-11-10",
  "versao": "0.2.0",
  "modo": "regex",
@@ -614,7 +614,7 @@
      "defeito_ambiguo": false
     }
    },
-   "ms": 0.97,
+   "ms": 0.96,
    "versao": "0.2.0"
   },
   {
@@ -622,7 +622,7 @@
    "etapa": "rede",
    "entrada": "Cadê meu pedido 7003? Era pra ter chegado dia 8",
    "saida": "concorda",
-   "ms": 0.02,
+   "ms": 0.01,
    "versao": "0.2.0"
   },
   {
@@ -654,7 +654,7 @@
     "prioridade": 9,
     "atrasado": true
    },
-   "ms": 0.02,
+   "ms": 0.01,
    "versao": "0.2.0"
   },
   {
@@ -690,7 +690,7 @@
     "aprovado": true,
     "falhas": []
    },
-   "ms": 0.32,
+   "ms": 0.25,
    "versao": "0.2.0"
   },
   {
@@ -804,7 +804,7 @@
      "defeito_ambiguo": false
     }
    },
-   "ms": 0.03,
+   "ms": 0.02,
    "versao": "0.2.0"
   },
   {
@@ -878,7 +878,7 @@
     "aprovado": true,
     "falhas": []
    },
-   "ms": 0.03,
+   "ms": 0.02,
    "versao": "0.2.0"
   },
   {
@@ -1505,7 +1505,7 @@
     "prioridade": 2,
     "atrasado": false
    },
-   "ms": 0.0,
+   "ms": 0.01,
    "versao": "0.2.0"
   },
   {
@@ -2132,7 +2132,7 @@
    "etapa": "rede",
    "entrada": "Qual o prazo do pedido 7008?",
    "saida": "concorda",
-   "ms": 0.01,
+   "ms": 0.0,
    "versao": "0.2.0"
   },
   {
@@ -2388,7 +2388,7 @@
     "aprovado": true,
     "falhas": []
    },
-   "ms": 0.03,
+   "ms": 0.02,
    "versao": "0.2.0"
   },
   {
