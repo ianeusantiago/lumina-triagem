@@ -21,6 +21,8 @@ def redigir(d, p):
             return "Olá! Como podemos ajudar? Conte o assunto e, se for sobre uma compra, o número do pedido."
         return PEDE_NUMERO
     base = f"Pedido {p['pedido']} ({p['produto']}): status {STATUS.get(p['status'], p['status'])}"
+    if d.categoria == "duvida_produto":
+        return f"{base}, com prazo de entrega previsto para {p['prazo_entrega']}."
     if d.categoria == "atraso":
         if d.atrasado:
             return (f"{base}, com prazo de entrega previsto para {p['prazo_entrega']}, que já passou. "
@@ -29,5 +31,7 @@ def redigir(d, p):
     if d.categoria == "cancelamento":
         return f"{base}. Como ainda não entrou em produção, o cancelamento é possível e foi registrado."
     if d.categoria == "troca":
-        return f"{base}. Para seguir com a troca, envie uma foto do produto mostrando o problema."
+        if "defeito" in d.motivo:
+            return f"{base}. Para seguir com a troca, envie uma foto do produto mostrando o problema."
+        return f"{base}. Para seguir com a troca, envie uma foto do produto que você recebeu."
     return ESCALADO

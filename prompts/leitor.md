@@ -18,10 +18,10 @@ Devolva APENAS um objeto JSON, sem markdown, com exatamente estes campos:
 }
 
 Guia de intenção:
-- atraso: pergunta onde está, quando chega, qual o prazo, ou diz que não chegou.
+- atraso: reclama que o pedido não chegou ou está atrasado ("cadê", "não chegou", "onde está", "era pra ter chegado").
 - troca: quer trocar/devolver ou relata produto recebido com problema/diferença.
 - cancelamento: quer cancelar.
-- duvida_produto: pergunta sobre produtos/catálogo sem pedido.
+- duvida_produto: pergunta sobre produtos/catálogo, ou só pergunta o prazo/quando chega um pedido, sem reclamar.
 - reclamacao: reclamação forte ou ameaça jurídica.
 - lgpd: pedido sobre dados pessoais.
 - outro: saudação ou assunto sem relação.

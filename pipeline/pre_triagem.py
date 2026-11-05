@@ -28,7 +28,7 @@ def classificar(ticket_id, texto):
         urg, motivo = "media", "reclamação de atraso"
     elif leitura.intencao in ("cancelamento", "troca"):
         urg, motivo = "baixa", f"pedido de {leitura.intencao}"
-    elif leitura.intencao == "atraso":
+    elif leitura.intencao == "atraso" or (leitura.intencao == "duvida_produto" and leitura.pedido_citado):
         urg, motivo = "baixa", "consulta de prazo"
     else:
         urg, motivo = "baixa", "dúvida ou mensagem sem pedido"

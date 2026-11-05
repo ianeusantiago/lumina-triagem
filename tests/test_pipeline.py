@@ -190,3 +190,24 @@ def test_defeito_relatado_vira_troca_e_nao_atraso():
     assert ler_regex("A garrafa do pedido 7002 veio amassada").intencao == "troca"
     assert ler_regex("Minha caneca do pedido 7011 veio rachada").intencao == "troca"
     assert ler_regex("Cadê meu pedido 7003? Era pra ter chegado dia 8").intencao == "atraso"
+
+
+def test_resposta_automatica_nunca_diz_que_foi_para_atendente():
+    from datetime import date
+    from pipeline.rodar import executar
+    _, res, _ = executar(date(2026, 11, 10), "regex")
+    for r in res:
+        if r.acao == "responder_auto":
+            assert "encaminhada" not in r.resposta.lower(), (r.ticket_id, r.resposta)
+
+
+def test_ajustes_da_banca():
+    from datetime import date
+    from pipeline.rodar import executar
+    _, res, _ = executar(date(2026, 11, 10), "regex")
+    d = {r.ticket_id: r for r in res}
+    assert (d["T07"].categoria, d["T07"].acao) == ("duvida_produto", "responder_auto")
+    assert (d["T17"].categoria, d["T17"].acao) == ("duvida_produto", "responder_auto")
+    assert "2026-11-15" in d["T17"].resposta
+    assert d["T09"].acao == "escalar_humano"
+    assert d["T19"].acao == "responder_auto" and "foto" in d["T19"].resposta

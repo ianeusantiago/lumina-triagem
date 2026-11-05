@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from datetime import date
 
-from .rede import norm
+
 
 
 @dataclass
@@ -41,9 +41,14 @@ def decidir(leitura, pedidos, hoje: date, divergencias=()):
         return _esc(cat, ped, "SPEC etapa 1b",
                     "rede de segurança achou sinal não marcado pelo Leitor: " + ",".join(divergencias), 2, True)
 
-    if p and leitura.produto_citado and leitura.produto_citado not in norm(p["produto"]):
-        return _esc(cat if cat != "outro" else "atraso", ped, "regra 8 / P7",
-                    f"cliente cita '{leitura.produto_citado}', pedido {ped} é '{p['produto']}'")
+    # P7 revista (banca): produto citado diferente do pedido não escala sozinho; status e personalização decidem.
+    if cat == "duvida_produto" and p:
+        atrasado = hoje > date.fromisoformat(p["prazo_entrega"]) and p["status"] != "entregue"
+        if atrasado:  # prazo vencido é atraso pela regra 1, mesmo quando o cliente só pergunta
+            cat = "atraso"
+        else:
+            return Decisao(cat, "responder_auto", ped, ["regra 1", "P5"],
+                           "pergunta de prazo dentro do prazo: informa status e prazo")
 
     if cat == "cancelamento":
         if not p:
@@ -59,7 +64,8 @@ def decidir(leitura, pedidos, hoje: date, divergencias=()):
         if p["status"] != "entregue":
             return _esc(cat, ped, "P9", f"troca antes da entrega (status {p['status']})")
         if p["personalizado"] == "nao":
-            return Decisao(cat, "responder_auto", ped, ["regra 2"], "não personalizado: pede foto")
+            return Decisao(cat, "responder_auto", ped, ["regra 2"],
+                           "não personalizado com defeito: pede foto" if s.defeito_nosso else "não personalizado: pede foto")
         if s.erro_cliente:
             return _esc(cat, ped, "regra 2", "erro de digitação/arte do cliente")
         if s.defeito_ambiguo:
@@ -77,4 +83,5 @@ def decidir(leitura, pedidos, hoje: date, divergencias=()):
         return d
     if cat == "duvida_produto":
         return Decisao(cat, "responder_auto", ped, ["P4"], "sem catálogo: não confirma nem nega")
-    return Decisao("outro", "responder_auto", ped, ["regra 4"], "sem assunto/número: pede detalhes")
+    # P10 (banca): sem assunto claro, na dúvida o erro preferido é mandar para humano.
+    return _esc("outro", ped, "P10", "sem assunto claro: na dúvida, atendente")

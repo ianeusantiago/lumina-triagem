@@ -42,9 +42,9 @@ Por que o Leitor é IA e o resto código: o texto livre precisa de interpretaç�
 | T04 | troca | responder_auto | 7001 | arte cortada = defeito nosso, pede foto ⚠️P2 |
 | T05 | troca | escalar_humano | 7005 | erro de digitação do cliente |
 | T06 | reclamacao | escalar_humano | 7009 | Procon |
-| T07 | atraso | responder_auto | 7006 | no prazo (11-12), informa status/prazo |
+| T07 | duvida_produto | responder_auto | 7006 | só pergunta, no prazo (11-12): informa status/prazo ✅banca |
 | T08 | lgpd | escalar_humano | | exclusão de dados |
-| T09 | outro | responder_auto | | pede número/assunto |
+| T09 | outro | escalar_humano | | sem assunto: na dúvida, humano ✅banca (P10) |
 | T10 | outro | escalar_humano | 7008 | instrução embutida ⚠️P3 |
 | T11 | troca | responder_auto | 7011 | não personalizado, pede foto |
 | T12 | duvida_produto | responder_auto | | sem catálogo nos dados: não confirma nem nega ⚠️P4 |
@@ -52,23 +52,38 @@ Por que o Leitor é IA e o resto código: o texto livre precisa de interpretaç�
 | T14 | cancelamento | responder_auto | 7010 | aguardando_producao |
 | T15 | troca | escalar_humano | 7012 | cor diferente: defeito ou arquivo do cliente? ⚠️P2 |
 | T16 | atraso | responder_auto | | 9999 não existe, pede número |
-| T17 | atraso | responder_auto | 7008 | informa status/prazo (11-15) ⚠️P5 |
+| T17 | duvida_produto | responder_auto | 7008 | só pergunta, no prazo (11-15): informa status/prazo ✅banca (P5) |
 | T18 | reclamacao | escalar_humano | 7009 | ameaça jurídica ⚠️P6 |
-| T19 | troca | escalar_humano | 7007 | cliente diz "caneca", 7007 é capinha: produto não bate ⚠️P7 |
+| T19 | troca | responder_auto | 7007 | não personalizado e entregue: regra 2, pede foto ✅banca (P7 revista) |
 | T20 | cancelamento | escalar_humano | 7005 | personalizado enviado |
 
 Resultado: 11 auto, 9 humano.
+
+Revisão após a banca (nota 16/20): os 4 erros (T07, T09, T17, T19) eram exatamente onde nossas premissas P5, P7 e "oi→auto" divergiam do que a banca mede. Corrigido; o pipeline reproduzia os mesmos 16/20 antes da correção.
 
 ## Premissas
 - P1: atraso vencido sem reclamação forte → `responder_auto` (a regra 1 só fala explicitamente do caso no prazo).
 - P2: "arte cortada" é defeito de produção; "cor diferente da arte" é ambíguo → humano; idem "diferente do que pedi"/"não ficou como queria" sem defeito claro.
 - P3: injeção de instrução → categoria `outro` (não há categoria própria).
 - P4: sem catálogo, `duvida_produto` responde sem afirmar disponibilidade.
-- P5: pergunta de prazo de pedido → `atraso` (status de entrega), mesmo sem reclamação.
+- P5 (revista pela banca): só perguntar o prazo, dentro do prazo, é `duvida_produto` com `responder_auto` informando status e prazo. É `atraso` quando o cliente reclama ou quando o prazo já venceu (regra 1).
 - P6: quando ameaça jurídica e atraso coexistem, `reclamacao` vence (regra 5 tem prioridade).
-- P7: produto citado no ticket diferente do produto do pedido → `escalar_humano` (regra 8: não assumir qual dado está certo). Achado do `scripts/perfil.py`.
+- P7 (revista pela banca): produto citado diferente do produto do pedido **não** escala sozinho; status e personalização decidem (regra 2). Escalar por isso inflava a fila. A resposta usa só os dados do pedido.
+- P10 (confirmada pela banca): ticket sem assunto claro ("oi", "bom dia") → `outro` + `escalar_humano`. Na dúvida, o erro preferido é mandar para humano.
 - P8: cancelamento de não personalizado `em_transporte`/`entregue` → `escalar_humano` (regra 3 não cobre).
 - P9: troca de pedido ainda não entregue (status != `entregue`) → `escalar_humano`.
+## Premissas a confirmar com a banca
+Lição do feedback: premissa inventada e não confirmada é risco. Antes da próxima entrega, perguntar:
+| Premissa | Pergunta para a banca |
+|---|---|
+| P1 | Atraso com prazo vencido, sem reclamação forte, pode ser respondido automaticamente informando status e prazo? |
+| P2 | "Arte cortada" é defeito nosso (auto, pede foto)? "Cor diferente da arte" vai para humano? |
+| P3 | Tentativa de manipulação entra na categoria `outro`? |
+| P4 | Dúvida de catálogo sem dados: responder sem confirmar nem negar, ou mandar para humano? |
+| P6 | Ameaça jurídica junto com atraso: a categoria é `reclamacao`? |
+| P8 | Cancelamento de não personalizado já em transporte ou entregue vai para humano? |
+| P9 | Troca de pedido ainda não entregue vai para humano? |
+
 - Ordem de prioridade do Juiz: manipulação > LGPD > jurídico/reclamação forte > cancelamento > troca > atraso > dúvida > outro.
 - `pedido` sai vazio se não existir no CSV, mesmo que citado.
 - Os testes escondidos checam `categoria`, `acao` e `pedido` com mais rigor que o texto de `resposta` (HIPÓTESE).

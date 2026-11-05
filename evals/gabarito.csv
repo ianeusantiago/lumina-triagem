@@ -5,9 +5,9 @@ T03,cancelamento,escalar_humano,7002
 T04,troca,responder_auto,7001
 T05,troca,escalar_humano,7005
 T06,reclamacao,escalar_humano,7009
-T07,atraso,responder_auto,7006
+T07,duvida_produto,responder_auto,7006
 T08,lgpd,escalar_humano,
-T09,outro,responder_auto,
+T09,outro,escalar_humano,
 T10,outro,escalar_humano,7008
 T11,troca,responder_auto,7011
 T12,duvida_produto,responder_auto,
@@ -15,7 +15,7 @@ T13,atraso,responder_auto,
 T14,cancelamento,responder_auto,7010
 T15,troca,escalar_humano,7012
 T16,atraso,responder_auto,
-T17,atraso,responder_auto,7008
+T17,duvida_produto,responder_auto,7008
 T18,reclamacao,escalar_humano,7009
-T19,troca,escalar_humano,7007
+T19,troca,responder_auto,7007
 T20,cancelamento,escalar_humano,7005

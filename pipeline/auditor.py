@@ -24,7 +24,5 @@ def auditar(linha, leitura, pedidos):
             falhas.append(f"número '{n}' fora dos dados")
     if re.search(PROIBIDO, norm(resp)):
         falhas.append("promessa proibida (regra 7)")
-    if p and leitura.produto_citado and leitura.produto_citado not in norm(p["produto"]) \
-            and linha["acao"] == "responder_auto":
-        falhas.append("produto citado não bate com o pedido")
+    # Produto citado diferente do pedido não reprova: a resposta só usa dados do CSV (P7 revista pela banca).
     return Auditoria(aprovado=not falhas, falhas=falhas)

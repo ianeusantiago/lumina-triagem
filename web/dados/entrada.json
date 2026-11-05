@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-11-05T10:42:14",
+ "gerado_em": "2026-11-05T13:13:21",
  "hoje": "2026-11-10",
  "regra": "pre_triagem (código, sem IA)",
  "tickets": [
@@ -56,7 +56,7 @@
    "texto": "Meu pedido ainda vai chegar dentro do prazo? É o 7006",
    "urgencia": "baixa",
    "motivo": "consulta de prazo",
-   "categoria_prevista": "atraso",
+   "categoria_prevista": "duvida_produto",
    "pedido_citado": "7006"
   },
   {
@@ -136,7 +136,7 @@
    "texto": "Qual o prazo do pedido 7008?",
    "urgencia": "baixa",
    "motivo": "consulta de prazo",
-   "categoria_prevista": "atraso",
+   "categoria_prevista": "duvida_produto",
    "pedido_citado": "7008"
   },
   {

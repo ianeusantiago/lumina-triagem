@@ -14,8 +14,9 @@ KW = {
 INTENCAO = [
     ("cancelamento", r"cancel"),
     ("troca", r"troca|trocar|devolv"),
-    ("atraso", r"cade|nao chegou|atrasad|prazo|onde esta|chegar|quando chega"),
-    ("duvida_produto", r"voces (fazem|tem|vendem)|tem (para|pra)|quanto custa"),
+    # atraso = o cliente reclama que não chegou; só perguntar o prazo é dúvida (regra 1, confirmado pela banca)
+    ("atraso", r"cade|nao chegou|atrasad|onde esta|era pra ter chegado|ainda nao recebi"),
+    ("duvida_produto", r"prazo|quando chega|vai chegar|chegar|voces (fazem|tem|vendem)|tem (para|pra)|quanto custa"),
 ]
 DEFEITO = r"cortad|trincad|quebrad|defeit|rachad|manchad|riscad|amassad"
 AMBIGUO = r"cor diferente|diferente do que|nao ficou como|nao gostei"
