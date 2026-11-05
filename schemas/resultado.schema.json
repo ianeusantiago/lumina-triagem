@@ -221,6 +221,7 @@
     "modo": {
       "enum": [
         "api",
+        "ollama",
         "fallback",
         "regex"
       ],

@@ -6,7 +6,7 @@ from .auditor import auditar
 from .juiz import Decisao, decidir
 from .modelos import Evidencia, TicketResultado
 from .redator import ESCALADO, redigir
-from .rede import comparar, idioma
+from .rede import comparar, complementar, idioma
 
 
 def processar(tid, texto, leitor, pedidos, hoje, log):
@@ -25,7 +25,10 @@ def processar(tid, texto, leitor, pedidos, hoje, log):
         sinais = []
     else:
         div = comparar(leitura, texto)
+        leitura, notas = complementar(leitura, texto)
         rede_txt = ("discorda: regex achou " + ",".join(div)) if div else "concorda"
+        if notas:
+            rede_txt += "; " + "; ".join(notas)
         reg("rede", texto, rede_txt, t0)
         t0 = time.perf_counter()
         d = decidir(leitura, pedidos, hoje, div)

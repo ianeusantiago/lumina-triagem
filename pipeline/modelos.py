@@ -73,7 +73,7 @@ class Resultado(BaseModel):
     gerado_em: str
     hoje: str
     versao: str
-    modo: Literal["api", "fallback", "regex"]
+    modo: Literal["api", "ollama", "fallback", "regex"]
     resumo: Resumo
     tickets: list[TicketResultado]
     log: list[LogEntrada]

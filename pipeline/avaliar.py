@@ -28,7 +28,7 @@ def placar(nome, res, esperado):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hoje", default="2026-11-10")
-    ap.add_argument("--modo", choices=["api", "fallback", "regex"])
+    ap.add_argument("--modo", choices=["api", "ollama", "fallback", "regex"])
     a = ap.parse_args()
     hoje = date.fromisoformat(a.hoje)
 

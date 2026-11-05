@@ -65,9 +65,9 @@ def ler_csv_tickets(conteudo: bytes):
     return tickets
 
 
-def triar_csv(conteudo: bytes, hoje: date):
+def triar_csv(conteudo: bytes, hoje: date, modo=None):
     tickets = ler_csv_tickets(conteudo)
-    modo, res, log = executar(hoje, None, tickets)
+    modo, res, log = executar(hoje, modo, tickets)
     resultado, entrada = montar(hoje, modo, res, log, tickets)
     return {"resultado": json.loads(resultado.model_dump_json()), "entrada": entrada}
 

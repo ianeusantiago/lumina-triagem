@@ -57,6 +57,27 @@ def idioma(texto):
     return melhor if pontos[melhor] else "pt"
 
 
+def complementar(leitura, texto):
+    """Completa a leitura da IA com fatos que o código extrai melhor, sem tirar nada que a IA marcou.
+
+    - Número do pedido é fato, não interpretação: se a IA não trouxe, o código pega do texto.
+    - Sinais que mandam para humano (defeito ambíguo, erro do cliente) são somados: na dúvida, atendente.
+    Retorna (leitura, notas) — notas vão para o log.
+    """
+    rx = ler_regex(texto)
+    notas, mud, sin = [], {}, {}
+    if not leitura.pedido_citado and rx.pedido_citado:
+        mud["pedido_citado"] = rx.pedido_citado
+        notas.append(f"pedido {rx.pedido_citado} extraído pelo código")
+    for k in ("defeito_ambiguo", "erro_cliente"):
+        if getattr(rx.sinais, k) and not getattr(leitura.sinais, k):
+            sin[k] = True
+            notas.append(f"sinal {k} somado pelo código")
+    if sin:
+        mud["sinais"] = leitura.sinais.model_copy(update=sin)
+    return (leitura.model_copy(update=mud) if mud else leitura), notas
+
+
 def sinais_criticos(texto):
     t = norm(texto)
     return {k: bool(re.search(KW[k], t)) for k in CRITICOS}

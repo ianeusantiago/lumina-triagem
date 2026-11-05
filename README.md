@@ -83,7 +83,16 @@ Na demo: **13 de 23** respondidos automaticamente, **10** para a atendente, **5 
 
 O modo por regras é a **reserva**: roda sem custo e garante que a demo funciona sem internet. Mas ele foi ajustado olhando estes tickets. Na primeira vez que viu casos novos, acertou só **10 de 15 linhas (67%)** ([`evals/baseline.md`](evals/baseline.md)), e o teste de importação achou mais 2 erros com frases novas. É exatamente aí que entra o Claude: ler texto livre que ninguém previu. Ele **nunca decide a ação**; só preenche a leitura (intenção, pedido, sinais), validada por schema, e a rede de segurança por regras confere essa leitura. A decisão é sempre do Juiz em código, porque precisa ser repetível e auditável.
 
-**Ainda não medido:** a nota do Claude nos casos novos. Com a chave no ambiente, o comando é `python -m pipeline.avaliar --modo api`.
+**IA local e gratuita (Ollama).** Com o [Ollama](https://ollama.com) rodando e o modelo `qwen2.5:7b`, o Leitor usa IA de verdade sem custo, inclusive para CSV importado no site (`python -m pipeline.avaliar --modo ollama`):
+
+| Leitor | Gabarito (23) | Casos novos (25) | Ação certa |
+|---|---|---|---|
+| qwen2.5:7b sozinho | 20/23 | 19/25 | 45/48 |
+| qwen2.5:7b + complementação por código | 21/23 | 22/25 | **48/48** |
+
+A complementação (`rede.complementar`) só acrescenta: o número do pedido é extraído por código quando a IA não traz, e sinais de "na dúvida, humano" são somados. Os 5 erros restantes são só de categoria, com a ação certa ([`ERROS.md`](ERROS.md)). Nenhum caso crítico foi respondido automaticamente.
+
+**Ainda não medido:** a nota do Claude. Com a chave no ambiente, o comando é `python -m pipeline.avaliar --modo api`.
 
 > **Limites honestos.** As regras foram escritas olhando estes dados, então o gabarito tem vazamento: os casos novos valem mais. A leitura pelo Claude ainda não foi medida, porque a demo roda no modo de reserva, sem custo. Os tickets não têm data de chegada, então o tempo de espera ainda não é medido. Erros encontrados ficam em [`ERROS.md`](ERROS.md).
 

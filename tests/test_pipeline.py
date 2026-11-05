@@ -169,7 +169,7 @@ def test_servidor_valida_csv():
 def test_servidor_tria_lote_com_mesmo_pipeline():
     from datetime import date
     from pipeline.servidor import triar_csv
-    r = triar_csv(b"ticket_id,texto\nN1,Vou processar a empresa pelo pedido 7009\nN2,Qual o prazo do pedido 7008?\n", date(2026, 11, 10))
+    r = triar_csv(b"ticket_id,texto\nN1,Vou processar a empresa pelo pedido 7009\nN2,Qual o prazo do pedido 7008?\n", date(2026, 11, 10), "regex")
     dec = {t["ticket_id"]: t for t in r["resultado"]["tickets"]}
     assert dec["N1"]["acao"] == "escalar_humano" and dec["N1"]["critico"]
     assert dec["N2"]["acao"] == "responder_auto"
@@ -244,3 +244,33 @@ def test_pre_triagem_reclamacao_de_atraso_em_outros_idiomas():
     assert classificar("X", "Hi, where is my order 7003? It was supposed to arrive on the 8th")["urgencia"] == "media"
     assert classificar("X", "¿Dónde está mi pedido 7003? No ha llegado")["urgencia"] == "media"
     assert classificar("X", "Qual o prazo do pedido 7008?")["urgencia"] == "baixa"
+
+
+def test_ollama_schema_sem_referencias():
+    import json
+    from pipeline.leitor import _schema_sem_refs
+    s = json.dumps(_schema_sem_refs())
+    assert "$ref" not in s and '"injecao"' in s and '"intencao"' in s
+
+
+def test_ollama_fora_do_ar_escala_para_humano(monkeypatch):
+    from datetime import date
+    from pipeline import leitor as L
+    from pipeline.rodar import executar
+    monkeypatch.setattr(L, "OLLAMA_URL", "http://127.0.0.1:9")  # porta fechada
+    _, res, _ = executar(date(2026, 11, 10), "ollama", [{"ticket_id": "X1", "texto": "Qual o prazo do pedido 7008?"}])
+    assert res[0].acao == "escalar_humano"
+
+
+def test_complementar_leitura_da_ia_com_fatos_do_codigo():
+    from pipeline.modelos import Leitura, Sinais
+    from pipeline.rede import complementar
+    # IA não trouxe o número do pedido nem marcou a ambiguidade (erros reais do qwen2.5 em C14/T15)
+    ia = Leitura(intencao="troca", pedido_citado=None, produto_citado=None, sinais=Sinais(defeito_nosso=True))
+    l, notas = complementar(ia, "Recebi a capinha do 7012 diferente do que pedi")
+    assert l.pedido_citado == "7012" and l.sinais.defeito_ambiguo and l.sinais.defeito_nosso
+    assert len(notas) == 2
+    # nunca tira o que a IA marcou
+    ia2 = Leitura(intencao="lgpd", pedido_citado="7003", produto_citado=None, sinais=Sinais(lgpd=True))
+    l2, notas2 = complementar(ia2, "apaguem meus dados")
+    assert l2 == ia2 and notas2 == []

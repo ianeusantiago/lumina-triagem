@@ -68,9 +68,10 @@ function aplicarDados(d, e) {
   entradaPorId = new Map(entrada.map((t) => [t.ticket_id, t]));
   triados = new Set([...triados].filter((id) => porId.has(id)));
   const quando = `${dataBR(d.gerado_em)} ${String(d.gerado_em).slice(11, 16)}`;
+  const leitor = { ollama: "leitura por IA local (Ollama)", api: "leitura pelo Claude", fallback: "leitura do Claude (salva)", regex: "leitura por regras (reserva)" }[d.modo] || d.modo;
   $("#fonte").textContent = origem.tipo === "csv"
-    ? `Arquivo ${origem.nome} · ${d.tickets.length} tickets · triado em ${quando} · referência ${dataBR(d.hoje)}`
-    : `Dados da demonstração · atualizado em ${quando} · referência ${dataBR(d.hoje)}`;
+    ? `Arquivo ${origem.nome} · ${d.tickets.length} tickets · ${leitor} · triado em ${quando}`
+    : `Dados da demonstração · ${leitor} · atualizado em ${quando} · referência ${dataBR(d.hoje)}`;
   $("#voltar-demo").hidden = origem.tipo !== "csv";
 }
 
