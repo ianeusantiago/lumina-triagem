@@ -74,11 +74,11 @@ function renderEntrada() {
   $("#lista-entrada").innerHTML = l.length
     ? l.map((t, i) => `<li>${card(t, { botao: false, decisao: false, destaque: t.ticket_id === foco, i })}</li>`).join("")
     : '<li class="estado">Nenhum ticket na entrada.</li>';
-  $("#h-total").textContent = l.length; $("#h-hoje").textContent = dados.hoje ?? "—";
+  $("#h-total").textContent = l.length; $("#h-hoje").textContent = dados.hoje ?? "—"; $("#h-modo").textContent = dados.modo === "regex" ? "regras (reserva)" : (dados.modo ?? "—");
   const alvo = l.find((t) => t.ticket_id === foco);
   if (alvo) {
     $("#gatilho").hidden = false;
-    $("#gatilho").innerHTML = `<span class="etiqueta">Ticket em foco</span><span class="id">${esc(alvo.ticket_id)}</span> <span class="txt">${esc(alvo.texto)}</span>
+    $("#gatilho").innerHTML = `<span class="etiqueta">Ticket em foco</span> <span class="id">${esc(alvo.ticket_id)}</span> <span class="txt">${esc(alvo.texto)}</span>
       <small>Posição ${l.indexOf(alvo) + 1} de ${l.length} na fila</small>`;
   }
 }

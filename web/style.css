@@ -117,7 +117,7 @@ button.tk:hover{border-color:var(--azul-2);transform:translateY(-2px);box-shadow
 /* KPIs */
 .contagem{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
 .kpi{display:grid;gap:2px;animation:entra .4s ease both}
-.kpi .num{font-size:clamp(40px,5vw,56px);font-weight:800;letter-spacing:-.04em;line-height:1.1;color:var(--navy);font-variant-numeric:tabular-nums}
+.kpi .num{font-size:36px;font-weight:800;letter-spacing:-.04em;line-height:1.1;color:var(--navy);font-variant-numeric:tabular-nums}
 .card--escuro .num{color:#fff}
 .kpi small{color:var(--mudo);font-size:13px}
 .card--escuro small{color:#aab6d3}
@@ -187,3 +187,14 @@ dd{margin:0}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+/* Painel interno: cabeçalhos funcionais */
+.pg-cab{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--linha)}
+.pg-cab>div{display:grid;gap:4px;min-width:0}
+.pg-titulo{font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--navy)}
+.pg-cab .sub{font-size:14px}
+.resumo-linha{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mini{display:grid;gap:2px;padding:14px 16px}
+.mini b{font-size:20px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.gatilho .txt{font-size:16px}
+@media (max-width:600px){.resumo-linha{grid-template-columns:1fr}.pg-cab .btn{width:100%;justify-content:center}}

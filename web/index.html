@@ -38,27 +38,23 @@
   <div id="estado" class="estado" role="status"></div>
 
   <section id="tela-entrada" class="tela">
-    <div class="hero-grade hero">
-      <span class="etiqueta etiqueta--clara">Atendimento · Lumina Personalizados</span>
-      <h1 class="titulo hero__titulo">Os casos delicados<br>chegam <span class="marca">primeiro.</span></h1>
-      <p class="hero__sub">Jurídico, Procon e LGPD se perdem no meio de "cadê meu pedido?". A Lumina responde sozinha o que os dados já respondem e entrega à atendente só o que precisa de gente, na ordem certa.</p>
-      <div class="hero__acoes">
-        <button class="btn btn--lima btn--grande" data-ir="resultado"><svg class="ic"><use href="#i-play"/></svg> Ir para a triagem</button>
-        <span class="hero__dado"><b id="h-total">—</b> tickets na fila · hoje <b id="h-hoje">—</b></span>
-      </div>
+    <div class="pg-cab">
+      <div><h1 class="pg-titulo">Entrada</h1><p class="sub">Tickets recebidos, em ordem de chegada, antes da triagem.</p></div>
+      <button class="btn btn--lima" data-ir="resultado"><svg class="ic"><use href="#i-seta"/></svg> Ir para a triagem</button>
+    </div>
+    <div class="resumo-linha">
+      <div class="card mini"><span class="etiqueta">Tickets na fila</span><b id="h-total">—</b></div>
+      <div class="card mini"><span class="etiqueta">Data de referência</span><b id="h-hoje">—</b></div>
+      <div class="card mini"><span class="etiqueta">Leitura</span><b id="h-modo">—</b></div>
     </div>
     <div id="gatilho" class="gatilho" hidden></div>
-    <div class="secao-cab">
-      <div><span class="etiqueta">Fila crua</span><h2 class="titulo h2">Do jeito que chegou</h2></div>
-      <p class="sub">Casos delicados misturados com pedidos simples, em ordem de chegada.</p>
-    </div>
     <ol id="lista-entrada" class="lista lista--grade"></ol>
   </section>
 
   <section id="tela-resultado" class="tela" hidden>
-    <div class="secao-cab">
-      <div><span class="etiqueta">Orquestração</span><h1 class="titulo h1">Quatro agentes, <span class="marca">uma decisão.</span></h1></div>
-      <button id="rodar" class="btn btn--lima btn--grande"><svg class="ic"><use href="#i-play"/></svg> <span>Rodar triagem</span></button>
+    <div class="pg-cab">
+      <div><h1 class="pg-titulo">Triagem</h1><p class="sub">Leitor, Juiz, Redator e Auditor processam cada ticket em sequência.</p></div>
+      <button id="rodar" class="btn btn--lima"><svg class="ic"><use href="#i-play"/></svg> <span>Rodar triagem</span></button>
     </div>
     <ol class="fluxo" id="etapas" aria-label="Agentes">
       <li data-e="leitor"><span class="fluxo__ic"><svg class="ic"><use href="#i-ler"/></svg></span><span class="etiqueta">01 · leitura</span><b>Leitor</b><small>entende o que o cliente quis dizer</small><span class="cont" data-c="leitor">0/20</span><span class="barra"><i data-b="leitor"></i></span></li>
@@ -72,9 +68,9 @@
     </div>
     <div id="saida-resultado" hidden>
       <div class="contagem" aria-live="polite">
-        <div class="card kpi"><div class="card__risco" style="background:var(--ciano)"></div><span class="etiqueta">Respondidos sozinhos</span><span id="k-auto" class="num">0</span><small>com dados reais do pedido</small></div>
-        <div class="card kpi"><div class="card__risco" style="background:var(--pink)"></div><span class="etiqueta">Para a atendente</span><span id="k-humano" class="num">0</span><small>só o que precisa de gente</small></div>
-        <div class="card card--escuro kpi"><div class="card__risco" style="background:var(--lima)"></div><span class="etiqueta etiqueta--lima">Críticos no topo</span><span id="k-crit" class="num">0</span><small>jurídico, Procon, LGPD, manipulação</small></div>
+        <div class="card kpi"><div class="card__risco" style="background:var(--ciano)"></div><span class="etiqueta">Automáticos</span><span id="k-auto" class="num">0</span><small>respondidos com dados do pedido</small></div>
+        <div class="card kpi"><div class="card__risco" style="background:var(--pink)"></div><span class="etiqueta">Para a atendente</span><span id="k-humano" class="num">0</span><small>escalados para revisão humana</small></div>
+        <div class="card card--escuro kpi"><div class="card__risco" style="background:var(--lima)"></div><span class="etiqueta etiqueta--lima">Críticos</span><span id="k-crit" class="num">0</span><small>jurídico, Procon, LGPD, manipulação</small></div>
       </div>
       <div class="colunas">
         <div class="card coluna"><div class="coluna__cab"><span class="etiqueta">Fila da atendente</span><button class="btn btn--pink" data-ir="aprovacao">Abrir fila <svg class="ic"><use href="#i-seta"/></svg></button></div><ol id="lista-humano" class="lista"></ol></div>
@@ -84,20 +80,18 @@
   </section>
 
   <section id="tela-aprovacao" class="tela" hidden>
-    <div class="secao-cab">
-      <div><span class="etiqueta">Fila da atendente</span><h1 class="titulo h1">Só as exceções, <span class="marca">críticos primeiro.</span></h1></div>
+    <div class="pg-cab">
+      <div><h1 class="pg-titulo">Fila da atendente</h1><p class="sub">Casos escalados, ordenados por prioridade. A aprovação fica salva só neste navegador.</p></div>
       <button id="limpar" class="btn btn--fantasma">Desfazer aprovações</button>
     </div>
-    <p class="sub">A atendente revisa, ajusta o texto se quiser e aprova. A aprovação fica salva só neste navegador.</p>
     <ol id="lista-aprovacao" class="lista lista--aprov"></ol>
   </section>
 
   <section id="tela-log" class="tela" hidden>
-    <div class="secao-cab">
-      <div><span class="etiqueta">Auditável</span><h1 class="titulo h1">Cada passo, <span class="marca">linha a linha.</span></h1></div>
+    <div class="pg-cab">
+      <div><h1 class="pg-titulo">Log da execução</h1><p class="sub" id="log-meta"></p></div>
       <label class="filtro"><span class="etiqueta">Ticket</span><select id="filtro-log"><option value="">Todos</option></select></label>
     </div>
-    <p class="sub" id="log-meta"></p>
     <div class="card tabela-wrap"><table>
       <thead><tr><th>Ticket</th><th>Etapa</th><th>Entrada</th><th>Saída</th><th class="n">ms</th><th>Versão</th></tr></thead>
       <tbody id="corpo-log"></tbody>
