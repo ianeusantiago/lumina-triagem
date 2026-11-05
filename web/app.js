@@ -33,7 +33,7 @@ const horaBR = (iso) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", 
 const salvarTriados = () => gravarJSON(CH.triados, [...triados]);
 
 /* Auditor da edição humana: espelho de pipeline/auditor.py (tests/test_pipeline.py confere o PROIBIDO). */
-const PROIBIDO = "reembols|estorn|desconto|indeniza|novo prazo|nova data|ressarc|compensa";
+const PROIBIDO = "reembols|estorn|desconto|indeniza|novo prazo|nova data|ressarc|compensa|refund|discount|indemn|new deadline|new date|descuento|nueva fecha|nuevo plazo";
 const normTxt = (t) => t.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "");
 function auditarTexto(resp, pedido, p) {
   const falhas = [];

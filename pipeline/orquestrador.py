@@ -6,7 +6,7 @@ from .auditor import auditar
 from .juiz import Decisao, decidir
 from .modelos import Evidencia, TicketResultado
 from .redator import ESCALADO, redigir
-from .rede import comparar
+from .rede import comparar, idioma
 
 
 def processar(tid, texto, leitor, pedidos, hoje, log):
@@ -34,7 +34,7 @@ def processar(tid, texto, leitor, pedidos, hoje, log):
 
     t0 = time.perf_counter()
     p = pedidos.get(d.pedido)
-    resposta = redigir(d, p)
+    resposta = redigir(d, p, idioma(texto))
     reg("redator", d.__dict__.copy(), resposta, t0)
 
     t0 = time.perf_counter()

@@ -26,4 +26,5 @@ Guia de intenção:
 - lgpd: pedido sobre dados pessoais.
 - outro: saudação ou assunto sem relação.
 - desconhecida: não dá para entender.
+O ticket pode estar em português, inglês ou espanhol: classifique pelo sentido, com as mesmas categorias e sinais (ex.: "lawyer"/"abogado" = jurídico).
 Números que não são pedido (dias, valores em R$, modelos de celular) não vão em `pedido_citado`. Não invente nada que não esteja no texto.

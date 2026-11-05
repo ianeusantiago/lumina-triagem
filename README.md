@@ -8,8 +8,8 @@ Triagem de tickets de atendimento para a Lumina Personalizados: o que os dados j
 
 ![Python](https://img.shields.io/badge/Python-3.12-2659A5?logo=python&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-Leitor-0A1633)
-![Testes](https://img.shields.io/badge/testes-18%20passando-16A34A)
-![Gabarito](https://img.shields.io/badge/gabarito-20%2F20-D7D900?labelColor=0A1633)
+![Testes](https://img.shields.io/badge/testes-22%20passando-16A34A)
+![Gabarito](https://img.shields.io/badge/gabarito-23%2F23-D7D900?labelColor=0A1633)
 ![Casos novos](https://img.shields.io/badge/casos%20novos-20%2F20-D7D900?labelColor=0A1633)
 
 *A IA interpreta. A regra decide. O auditor confere.*
@@ -74,10 +74,10 @@ Medidos com `python -m pipeline.avaliar`, no modo por regras (sem chamar a API):
 
 | Conjunto | Categoria | Ação | Pedido |
 |---|---|---|---|
-| Gabarito (20 tickets da demo) | 20/20 | 20/20 | 20/20 |
+| Gabarito (23 tickets: 20 da demo + virada em inglês e espanhol) | 23/23 | 23/23 | 23/23 |
 | Casos novos (`evals/casos.csv`) | 20/20 | 20/20 | 20/20 |
 
-Na demo: **11 de 20** respondidos automaticamente, **9** para a atendente, **4 críticos** no topo.
+Na demo: **13 de 23** respondidos automaticamente, **10** para a atendente, **5 críticos** no topo. Tickets em inglês e espanhol são entendidos e respondidos no idioma do cliente.
 
 > **Limites honestos.** As regras foram escritas olhando estes dados, então o gabarito tem vazamento: os casos novos valem mais. A leitura pelo Claude ainda não foi medida, porque a demo roda no modo de reserva, sem custo. Os tickets não têm data de chegada, então o tempo de espera ainda não é medido. Erros encontrados ficam em [`ERROS.md`](ERROS.md).
 

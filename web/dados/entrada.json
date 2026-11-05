@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-11-05T13:13:21",
+ "gerado_em": "2026-11-05T13:26:01",
  "hoje": "2026-11-10",
  "regra": "pre_triagem (código, sem IA)",
  "tickets": [
@@ -162,6 +162,30 @@
    "motivo": "pedido de cancelamento",
    "categoria_prevista": "cancelamento",
    "pedido_citado": "7005"
+  },
+  {
+   "ticket_id": "T21",
+   "texto": "Hi, where is my order 7003? It was supposed to arrive on the 8th",
+   "urgencia": "baixa",
+   "motivo": "consulta de prazo",
+   "categoria_prevista": "atraso",
+   "pedido_citado": "7003"
+  },
+  {
+   "ticket_id": "T22",
+   "texto": "Quiero cancelar mi pedido 7010",
+   "urgencia": "baixa",
+   "motivo": "pedido de cancelamento",
+   "categoria_prevista": "cancelamento",
+   "pedido_citado": "7010"
+  },
+  {
+   "ticket_id": "T23",
+   "texto": "This is unacceptable. I will contact my lawyer about order 7009",
+   "urgencia": "urgente",
+   "motivo": "ameaça jurídica / Procon",
+   "categoria_prevista": "reclamacao",
+   "pedido_citado": "7009"
   }
  ]
 }

@@ -4,7 +4,7 @@ import re
 from .modelos import Auditoria
 from .rede import norm
 
-PROIBIDO = r"reembols|estorn|desconto|indeniza|novo prazo|nova data|ressarc|compensa"
+PROIBIDO = r"reembols|estorn|desconto|indeniza|novo prazo|nova data|ressarc|compensa|refund|discount|indemn|new deadline|new date|descuento|nueva fecha|nuevo plazo"
 
 
 def auditar(linha, leitura, pedidos):

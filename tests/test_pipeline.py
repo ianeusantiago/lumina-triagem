@@ -211,3 +211,29 @@ def test_ajustes_da_banca():
     assert "2026-11-15" in d["T17"].resposta
     assert d["T09"].acao == "escalar_humano"
     assert d["T19"].acao == "responder_auto" and "foto" in d["T19"].resposta
+
+
+def test_virada_multilingue():
+    from datetime import date
+    from pipeline.rede import idioma
+    from pipeline.rodar import executar
+    assert idioma("Hi, where is my order 7003?") == "en"
+    assert idioma("Quiero cancelar mi pedido 7010") == "es"
+    assert idioma("Cadê meu pedido 7003?") == "pt"
+    assert idioma("Cancela o 7008 por favor") == "pt"
+    _, res, _ = executar(date(2026, 11, 10), "regex")
+    d = {r.ticket_id: r for r in res}
+    assert (d["T21"].categoria, d["T21"].acao, d["T21"].pedido) == ("atraso", "responder_auto", "7003")
+    assert d["T21"].resposta.startswith("Order 7003") and "2026-11-08" in d["T21"].resposta
+    assert (d["T22"].categoria, d["T22"].acao, d["T22"].pedido) == ("cancelamento", "responder_auto", "7010")
+    assert d["T22"].resposta.startswith("Pedido 7010") and "cancelación" in d["T22"].resposta
+    assert (d["T23"].categoria, d["T23"].acao) == ("reclamacao", "escalar_humano") and d["T23"].critico
+
+
+def test_juridico_e_lgpd_em_ingles_e_espanhol_sem_falso_positivo():
+    from pipeline.rede import sinais_criticos
+    assert sinais_criticos("I will contact my lawyer")["juridico"]
+    assert sinais_criticos("Voy a poner una demanda")["juridico"]
+    assert sinais_criticos("Please delete my personal data")["lgpd"]
+    assert sinais_criticos("Borren mis datos personales")["lgpd"]
+    assert not sinais_criticos("Pedido atrasado por causa da alta demanda")["juridico"]

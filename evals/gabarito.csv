@@ -19,3 +19,6 @@ T17,duvida_produto,responder_auto,7008
 T18,reclamacao,escalar_humano,7009
 T19,troca,responder_auto,7007
 T20,cancelamento,escalar_humano,7005
+T21,atraso,responder_auto,7003
+T22,cancelamento,responder_auto,7010
+T23,reclamacao,escalar_humano,7009

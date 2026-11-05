@@ -18,7 +18,7 @@ HIPÓTESE: se os tickets que os dados já respondem saem automaticamente com res
 - **Negócio:** tempo até primeira resposta dos tickets `escalar_humano` críticos (jurídico/LGPD). Sem linha de base no material: medir antes/depois quando houver dados reais.
 
 ## Fora do escopo
-Enviar resposta ao cliente, integrar com helpdesk real, reembolso/estorno, login, multi-idioma, histórico do cliente, priorizar por SLA calculado, painel de métricas.
+Enviar resposta ao cliente, integrar com helpdesk real, reembolso/estorno, login, idiomas além de português, inglês e espanhol, histórico do cliente, priorizar por SLA calculado, painel de métricas.
 
 ## Etapas do fluxo
 | # | Etapa | Entrada | Saída | Modelo ou regra | Condição de falha → o que acontece |
@@ -56,8 +56,11 @@ Por que o Leitor é IA e o resto código: o texto livre precisa de interpretaç�
 | T18 | reclamacao | escalar_humano | 7009 | ameaça jurídica ⚠️P6 |
 | T19 | troca | responder_auto | 7007 | não personalizado e entregue: regra 2, pede foto ✅banca (P7 revista) |
 | T20 | cancelamento | escalar_humano | 7005 | personalizado enviado |
+| T21 | atraso | responder_auto | 7003 | 🌐 virada (inglês): prazo 11-08 vencido, em_transporte, sem reclamação forte (P1); resposta em inglês |
+| T22 | cancelamento | responder_auto | 7010 | 🌐 virada (espanhol): aguardando_producao (regra 3); resposta em espanhol |
+| T23 | reclamacao | escalar_humano | 7009 | 🌐 virada (inglês): ameaça de advogado (regra 5, P6) |
 
-Resultado: 11 auto, 9 humano.
+Resultado: 11 auto, 9 humano nos 20 originais; com a virada (T21–T23), 13 auto, 10 humano, 5 críticos.
 
 Revisão após a banca (nota 16/20): os 4 erros (T07, T09, T17, T19) eram exatamente onde nossas premissas P5, P7 e "oi→auto" divergiam do que a banca mede. Corrigido; o pipeline reproduzia os mesmos 16/20 antes da correção.
 
@@ -72,17 +75,21 @@ Revisão após a banca (nota 16/20): os 4 erros (T07, T09, T17, T19) eram exatam
 - P10 (confirmada pela banca): ticket sem assunto claro ("oi", "bom dia") → `outro` + `escalar_humano`. Na dúvida, o erro preferido é mandar para humano.
 - P8: cancelamento de não personalizado `em_transporte`/`entregue` → `escalar_humano` (regra 3 não cobre).
 - P9: troca de pedido ainda não entregue (status != `entregue`) → `escalar_humano`.
-## Premissas a confirmar com a banca
-Lição do feedback: premissa inventada e não confirmada é risco. Antes da próxima entrega, perguntar:
-| Premissa | Pergunta para a banca |
-|---|---|
-| P1 | Atraso com prazo vencido, sem reclamação forte, pode ser respondido automaticamente informando status e prazo? |
-| P2 | "Arte cortada" é defeito nosso (auto, pede foto)? "Cor diferente da arte" vai para humano? |
-| P3 | Tentativa de manipulação entra na categoria `outro`? |
-| P4 | Dúvida de catálogo sem dados: responder sem confirmar nem negar, ou mandar para humano? |
-| P6 | Ameaça jurídica junto com atraso: a categoria é `reclamacao`? |
-| P8 | Cancelamento de não personalizado já em transporte ou entregue vai para humano? |
-| P9 | Troca de pedido ainda não entregue vai para humano? |
+## Premissas confirmadas pela banca
+Todas as premissas foram levadas ao mentor da banca. Antes, P5, P7 e "oi→auto" foram tratadas como fato no gabarito próprio, sem confirmação, e foram exatamente os 4 erros (T07, T09, T17, T19). Agora cada uma está confirmada ou revista:
+
+| Premissa | Resposta da banca | Efeito |
+|---|---|---|
+| P1 | Atraso vencido sem reclamação forte: automático, informa status e prazo do ERP, sem data nova e sem desculpa exagerada. | Mantida (T01). |
+| P2 | "Arte cortada" é defeito nosso, pede foto. "Cor diferente" vai para humano. | Mantida (T04 auto, T15 humano). |
+| P3 | Manipulação é `outro` e escala. | Mantida (T10). |
+| P4 | Dúvida de catálogo: não confirma nem nega; pode dizer que a atendente confirma os modelos. | Mantida (T12). |
+| P5 | Só perguntar o prazo, dentro do prazo, não é atraso. | **Revista:** `duvida_produto` + auto (T07, T17). |
+| P6 | Ameaça de processo vence o atraso: `reclamacao` + humano. | Mantida (T18). |
+| P7 | Produto divergente não escala sozinho; status e personalização decidem. | **Revista:** T19 auto, pede foto. P9 não se aplica (7007 entregue) e P2 também não (não personalizado). |
+| P8 | Cancelamento fora da regra 3 vai para humano. | Mantida. |
+| P9 | Troca antes da entrega vai para humano. | Mantida. |
+| P10 | "oi" sem assunto: na dúvida, humano. | **Criada:** T09 humano. |
 
 - Ordem de prioridade do Juiz: manipulação > LGPD > jurídico/reclamação forte > cancelamento > troca > atraso > dúvida > outro.
 - `pedido` sai vazio se não existir no CSV, mesmo que citado.
@@ -90,3 +97,9 @@ Lição do feedback: premissa inventada e não confirmada é risco. Antes da pr�
 
 ## Demo
 Roteiro de 90 s em `docs/roteiro-demo.md`.
+
+## Virada: tickets em inglês e espanhol
+- A rede de segurança reconhece sinais críticos em PT, EN e ES (advogado/lawyer/abogado, dados pessoais/personal data/datos personales, manipulação).
+- As intenções (atraso, troca, cancelamento, dúvida) também têm padrões em EN e ES.
+- O Redator responde no idioma do ticket, com os mesmos modelos e os mesmos dados do pedido; o Auditor barra promessas nos três idiomas.
+- Idioma é detectado por palavras comuns; empate fica em português.
