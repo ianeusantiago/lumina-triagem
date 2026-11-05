@@ -154,3 +154,23 @@ def test_importar_correcoes_valida_e_anexa(tmp_path):
     assert [a["id"] for a in aceitas] == ["A-T17"]
     assert {r[0] for r in rejeitadas} == {"A-T01", "C01", "A-T02"}
     assert [l["id"] for l in csv.DictReader(destino.open(encoding="utf-8"))] == ["C01", "A-T17"]
+
+
+def test_servidor_valida_csv():
+    import pytest
+    from pipeline.servidor import CSVInvalido, ler_csv_tickets
+    ok = ler_csv_tickets("﻿ticket_id;texto\nN1;Vou no Procon, pedido 7009\nN2;oi\n".encode("utf-8"))
+    assert [t["ticket_id"] for t in ok] == ["N1", "N2"]
+    for ruim in [b"id,msg\n1,oi\n", b"ticket_id,texto\nN1,oi\nN1,de novo\n", b"ticket_id,texto\nN1,\n", "ticket_id,texto\nN1,é".encode("latin-1")]:
+        with pytest.raises(CSVInvalido):
+            ler_csv_tickets(ruim)
+
+
+def test_servidor_tria_lote_com_mesmo_pipeline():
+    from datetime import date
+    from pipeline.servidor import triar_csv
+    r = triar_csv(b"ticket_id,texto\nN1,Vou processar a empresa pelo pedido 7009\nN2,Qual o prazo do pedido 7008?\n", date(2026, 11, 10))
+    dec = {t["ticket_id"]: t for t in r["resultado"]["tickets"]}
+    assert dec["N1"]["acao"] == "escalar_humano" and dec["N1"]["critico"]
+    assert dec["N2"]["acao"] == "responder_auto"
+    assert {t["ticket_id"]: t["urgencia"] for t in r["entrada"]["tickets"]}["N1"] == "urgente"

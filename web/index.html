@@ -40,7 +40,14 @@
   <section id="tela-entrada" class="tela">
     <div class="pg-cab">
       <div><h1 class="pg-titulo">Entrada</h1><p class="sub">Tickets abertos por urgência. Selecione um grupo ou tickets avulsos e envie para a triagem.</p></div>
+      <div class="acoes-cab">
+        <button id="voltar-demo" class="btn btn--fantasma btn--p" hidden>Voltar aos dados da demo</button>
+        <button id="importar" class="btn btn--navy btn--p">Importar tickets (CSV)</button>
+        <input id="arquivo-csv" type="file" accept=".csv,text/csv" hidden>
+      </div>
     </div>
+    <div id="aviso-import" class="aviso-import" role="status" hidden></div>
+    <p class="dica-import">O CSV precisa das colunas <code>ticket_id</code> e <code>texto</code>. <button id="baixar-modelo" class="link">Baixar modelo</button></p>
     <div id="grupos" class="grupos"></div>
     <div class="ferramentas">
       <input id="busca" type="search" placeholder="Buscar por ID ou texto" aria-label="Buscar tickets">
@@ -64,7 +71,8 @@
   <section id="tela-resultado" class="tela" hidden>
     <div class="pg-cab">
       <div><h1 class="pg-titulo">Triagem</h1><p class="sub">Leitor, Juiz, Redator e Auditor processam cada ticket do lote em sequência. <span id="lote"></span></p></div>
-      <button class="btn btn--fantasma btn--p" data-ir="entrada">Voltar à entrada</button>
+      <div class="acoes-cab"><button id="baixar-triagem" class="btn btn--fantasma btn--p" disabled>Baixar triagem (CSV)</button>
+      <button class="btn btn--fantasma btn--p" data-ir="entrada">Voltar à entrada</button></div>
     </div>
     <ol class="fluxo" id="etapas" aria-label="Agentes">
       <li data-e="leitor"><span class="fluxo__ic"><svg class="ic"><use href="#i-ler"/></svg></span><span class="etiqueta">01 · leitura</span><b>Leitor</b><small>entende o que o cliente quis dizer</small><span class="cont" data-c="leitor">0/0</span><span class="barra"><i data-b="leitor"></i></span></li>

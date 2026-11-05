@@ -23,6 +23,20 @@ def executar(hoje, modo=None, tickets=None):
     return leitor.modo, res, log
 
 
+def montar(hoje, modo, res, log, tickets):
+    """Resultado (contrato do site) e pré-triagem da entrada para um lote de tickets."""
+    fila = sorted(res, key=lambda r: (r.prioridade, r.ticket_id))
+    resultado = Resultado(
+        gerado_em=datetime.now().isoformat(timespec="seconds"), hoje=str(hoje), versao=VERSAO, modo=modo,
+        resumo=Resumo(total=len(res), auto=sum(r.acao == "responder_auto" for r in res),
+                      humano=sum(r.acao == "escalar_humano" for r in res), criticos=sum(r.critico for r in res)),
+        tickets=fila, log=log,
+    )
+    entrada = {"gerado_em": resultado.gerado_em, "hoje": str(hoje), "regra": "pre_triagem (código, sem IA)",
+               "tickets": pre_triar(tickets)}
+    return resultado, entrada
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hoje", default="2026-11-10")
@@ -41,17 +55,9 @@ def main():
         for e in log:
             f.write(json.dumps(e, ensure_ascii=False) + "\n")
 
-    fila = sorted(res, key=lambda r: (r.prioridade, r.ticket_id))
-    resultado = Resultado(
-        gerado_em=datetime.now().isoformat(timespec="seconds"), hoje=str(hoje), versao=VERSAO, modo=modo,
-        resumo=Resumo(total=len(res), auto=sum(r.acao == "responder_auto" for r in res),
-                      humano=sum(r.acao == "escalar_humano" for r in res), criticos=sum(r.critico for r in res)),
-        tickets=fila, log=log,
-    )
+    resultado, entrada = montar(hoje, modo, res, log, carregar_tickets())
     (RAIZ / "web/dados").mkdir(parents=True, exist_ok=True)
     (RAIZ / "web/dados/resultado.json").write_text(resultado.model_dump_json(indent=1), encoding="utf-8")
-    entrada = {"gerado_em": resultado.gerado_em, "hoje": str(hoje), "regra": "pre_triagem (código, sem IA)",
-               "tickets": pre_triar(carregar_tickets())}
     (RAIZ / "web/dados/entrada.json").write_text(json.dumps(entrada, ensure_ascii=False, indent=1), encoding="utf-8")
     s = resultado.resumo
     print(f"modo={modo} hoje={hoje} total={s.total} auto={s.auto} humano={s.humano} criticos={s.criticos}")

@@ -53,27 +53,97 @@ function valido(d) {
 async function lerArq(arq) { const r = await fetch(arq, { cache: "no-store" }); return r.ok ? r.json() : null; }
 const dataBR = (iso) => { const [a, m, d] = String(iso).slice(0, 10).split("-"); return d ? `${d}/${m}/${a}` : iso; };
 
+const CH_LOTE = "lumina-lote";
+let origem = { tipo: "demo", nome: "" };
+
+/* Aplica um par resultado + entrada (da demo ou de um CSV importado). */
+function aplicarDados(d, e) {
+  if (!valido(d)) throw new Error("o resultado não segue o formato esperado");
+  dados = d;
+  porId = new Map(d.tickets.map((t) => [t.ticket_id, t]));
+  entrada = e?.tickets?.length ? [...e.tickets]
+    : d.tickets.map((t) => ({ ticket_id: t.ticket_id, texto: t.texto, urgencia: "baixa", motivo: "sem pré-triagem" }));
+  const num = (t) => parseInt(String(t.ticket_id).replace(/\D/g, ""), 10);
+  entrada.sort((a, b) => (num(a) - num(b)) || String(a.ticket_id).localeCompare(String(b.ticket_id)));
+  entradaPorId = new Map(entrada.map((t) => [t.ticket_id, t]));
+  triados = new Set([...triados].filter((id) => porId.has(id)));
+  const quando = `${dataBR(d.gerado_em)} ${String(d.gerado_em).slice(11, 16)}`;
+  $("#fonte").textContent = origem.tipo === "csv"
+    ? `Arquivo ${origem.nome} · ${d.tickets.length} tickets · triado em ${quando} · referência ${dataBR(d.hoje)}`
+    : `Dados da demonstração · atualizado em ${quando} · referência ${dataBR(d.hoje)}`;
+  $("#voltar-demo").hidden = origem.tipo !== "csv";
+}
+
 async function carregar() {
-  const fonte = $("#fonte");
   try {
+    const lote = lerJSON(CH_LOTE, null);
+    if (lote?.resultado) {
+      try { origem = { tipo: "csv", nome: lote.nome }; aplicarDados(lote.resultado, lote.entrada); return; }
+      catch { gravarJSON(CH_LOTE, null); origem = { tipo: "demo", nome: "" }; }
+    }
     let d = await lerArq("dados/resultado.json");
     if (!d) d = await lerArq("dados/exemplo.json");
     if (!d) throw new Error("nenhum arquivo em web/dados/. Rode python -m pipeline.rodar e abra por um servidor local.");
-    if (!valido(d)) throw new Error("resultado.json não segue o formato esperado");
-    dados = d;
-    porId = new Map(d.tickets.map((t) => [t.ticket_id, t]));
-    const e = await lerArq("dados/entrada.json").catch(() => null);
-    entrada = e?.tickets?.length ? e.tickets
-      : d.tickets.map((t) => ({ ticket_id: t.ticket_id, texto: t.texto, urgencia: "baixa", motivo: "sem pré-triagem" }));
-    const num = (t) => parseInt(String(t.ticket_id).replace(/\D/g, ""), 10) || 0;
-    entrada.sort((a, b) => num(a) - num(b));
-    entradaPorId = new Map(entrada.map((t) => [t.ticket_id, t]));
-    triados = new Set([...triados].filter((id) => porId.has(id)));
-    fonte.textContent = `Atualizado em ${dataBR(d.gerado_em)} ${String(d.gerado_em).slice(11, 16)} · data de referência ${dataBR(d.hoje)}`;
+    aplicarDados(d, await lerArq("dados/entrada.json").catch(() => null));
   } catch (err) {
     mostrarErro(err.message);
-    fonte.textContent = "Erro ao carregar dados";
+    $("#fonte").textContent = "Erro ao carregar dados";
   }
+}
+
+function limparTrabalho() {
+  triados.clear(); sel.clear(); rascunhos.clear(); salvarTriados();
+  for (const k of [CH.aprov, CH.override, CH.encam, CH.corr, CH.hist, CH.notas]) gravarJSON(k, k === CH.hist ? [] : {});
+}
+
+function avisoImport(tipo, html) {
+  const a = $("#aviso-import"); a.className = "aviso-import " + tipo; a.innerHTML = html; a.hidden = false;
+}
+
+/* Envia o CSV ao servidor local (python -m pipeline.servidor), que roda o mesmo pipeline em Python. */
+async function importarCSV(arq) {
+  if (!arq) return;
+  if (!confirm(`Importar ${arq.name}? O trabalho atual deste navegador (triagens, aprovações, encaminhamentos e notas) será substituído.`)) return;
+  avisoImport("info", `Enviando <b>${esc(arq.name)}</b> para a triagem…`);
+  let r;
+  try {
+    r = await fetch("api/triar", { method: "POST", headers: { "Content-Type": "text/csv" }, body: await arq.arrayBuffer() });
+  } catch { r = null; }
+  if (!r || r.status === 404 || r.status === 501) {
+    avisoImport("erro", `Para importar, abra o site pelo servidor da triagem: rode <code>python -m pipeline.servidor</code> e acesse <b>http://localhost:8765</b>.`);
+    return;
+  }
+  const corpo = await r.json().catch(() => ({}));
+  if (!r.ok) { avisoImport("erro", `Não deu para importar: ${esc(corpo.erro || r.status)}. Confira o arquivo (colunas <code>ticket_id</code> e <code>texto</code>, em UTF-8).`); return; }
+  limparTrabalho();
+  origem = { tipo: "csv", nome: arq.name };
+  aplicarDados(corpo.resultado, corpo.entrada);
+  try { localStorage.setItem(CH_LOTE, JSON.stringify({ nome: arq.name, resultado: corpo.resultado, entrada: corpo.entrada })); }
+  catch { avisoImport("info", "Arquivo grande demais para guardar no navegador: o lote fica só até recarregar a página."); }
+  registrar("lote importado", [], `${arq.name} · ${corpo.resultado.tickets.length} tickets`);
+  filtro = { urg: "", status: "abertos", busca: "" }; $("#busca").value = "";
+  renderBadge(); ir("entrada");
+  avisoImport("ok", `${ICO("check")} <b>${esc(arq.name)}</b> importado: ${corpo.entrada.tickets.length} tickets pré-classificados por urgência. Selecione e envie para a triagem.`);
+}
+
+async function voltarDemo() {
+  if (!confirm("Voltar aos dados da demonstração? O lote importado e o trabalho feito nele serão descartados deste navegador.")) return;
+  gravarJSON(CH_LOTE, null); limparTrabalho(); origem = { tipo: "demo", nome: "" };
+  $("#aviso-import").hidden = true;
+  await carregar(); renderBadge(); ir("entrada");
+}
+
+function baixarModelo() {
+  csvBaixar([["ticket_id", "texto"], ["N001", "Cadê meu pedido 7003? Era pra ter chegado dia 8"], ["N002", "Vocês fazem capinha para iPhone 17?"]], "modelo-tickets.csv");
+}
+
+/* Saída da triagem: uma linha por ticket já triado, com a decisão efetiva (inclui revisões puxadas pela atendente). */
+function baixarTriagem() {
+  const linhas = [["ticket_id", "urgencia_entrada", "categoria", "acao", "pedido", "critico", "motivo", "resposta", "revisado_pela_atendente"]];
+  for (const t of triadosLista().sort((a, b) => a.ticket_id.localeCompare(b.ticket_id)))
+    linhas.push([t.ticket_id, entradaPorId.get(t.ticket_id)?.urgencia ?? "", t.categoria, t.acao, t.pedido || "", t.critico ? "sim" : "nao",
+      t.evidencia?.motivo ?? "", t.resposta ?? "", t.puxado ? "sim" : "nao"]);
+  csvBaixar(linhas, `triagem-${dados.hoje}.csv`);
 }
 
 function mostrarErro(msg) {
@@ -277,6 +347,8 @@ function renderResultado() {
         <span class="txt">${esc(t.texto)}</span><span class="resp">${esc(t.resposta)}</span></button>
       <button class="btn btn--fantasma btn--p" data-puxar="${esc(t.ticket_id)}">Passar para atendente</button></li>`).join("")
     || '<li class="vazio">Nenhuma resposta automática neste lote.</li>';
+  $("#baixar-triagem").disabled = !l.length;
+  $("#baixar-triagem").textContent = `Baixar triagem (CSV, ${l.length})`;
   $("#sem-triagem").hidden = !!l.length || rodando;
   $("#saida-resultado").hidden = !l.length;
 }
@@ -562,7 +634,7 @@ function ir(tela) {
 }
 
 document.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-ir-abertos],[data-fila-tipo],[data-fila-sit],[data-auto-cat],[data-devolver],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
+  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-ir-abertos],#importar,#voltar-demo,#baixar-modelo,#baixar-triagem,[data-fila-tipo],[data-fila-sit],[data-auto-cat],[data-devolver],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
   if (!el || el.disabled) return;
   if (el.dataset.tela || el.dataset.ir) ir(el.dataset.tela || el.dataset.ir);
   else if (el.dataset.abrir) abrirEvidencia(el.dataset.abrir);
@@ -575,6 +647,10 @@ document.addEventListener("click", (e) => {
   else if (el.dataset.filaSit) { filaFiltro.sit = el.dataset.filaSit; focoFila = 0; renderAprovacao(); }
   else if (el.dataset.autoCat !== undefined) { autoCat = el.dataset.autoCat; renderResultado(); }
   else if (el.dataset.devolver) devolver(el.dataset.devolver);
+  else if (el.id === "importar") $("#arquivo-csv").click();
+  else if (el.id === "voltar-demo") voltarDemo();
+  else if (el.id === "baixar-modelo") baixarModelo();
+  else if (el.id === "baixar-triagem") baixarTriagem();
   else if (el.dataset.aprovar) aprovar(el.dataset.aprovar);
   else if (el.dataset.encaminhar) encaminhar(el.dataset.encaminhar);
   else if (el.dataset.salvarCorr) salvarCorrecao(el.dataset.salvarCorr);
@@ -591,7 +667,7 @@ document.addEventListener("click", (e) => {
   else if (el.id === "exportar") exportar();
   else if (el.id === "reiniciar") {
     if (!confirm("Reiniciar a demonstração? Triagens, aprovações, encaminhamentos, notas e correções deste navegador serão apagadas.")) return;
-    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {}); gravarJSON(CH.encam, {}); gravarJSON(CH.corr, {}); gravarJSON(CH.hist, []); gravarJSON(CH.notas, {}); rascunhos.clear();
+    limparTrabalho();
     renderBadge(); ir("entrada");
   } else if (el.classList.contains("fechar")) el.closest("dialog").close();
 });
@@ -606,6 +682,7 @@ document.addEventListener("change", (e) => {
     return;
   }
   if (c.dataset.nota !== undefined) { salvarNota(c); return; }
+  if (c.id === "arquivo-csv") { importarCSV(c.files[0]); c.value = ""; return; }
   if (c.dataset.marcar) { c.checked ? sel.add(c.dataset.marcar) : sel.delete(c.dataset.marcar); renderGrupos(); renderBarra(); }
   else if (c.dataset.marcarGrupo) {
     entrada.filter((t) => t.urgencia === c.dataset.marcarGrupo && !triados.has(t.ticket_id))
