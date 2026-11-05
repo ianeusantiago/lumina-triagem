@@ -6,4 +6,4 @@
 5. 04-fatia (implementar uma fatia) — pendente
 6. 05-verificador — sessão nova, após a fatia e evals/casos.csv
 7. 06-casos-avaliacao — pendente
-8. 07-sabatina — pendente
+8. 07-sabatina — último passo, com slides prontos
