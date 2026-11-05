@@ -4,7 +4,9 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ROTULO = { responder_auto: "resposta automática", escalar_humano: "atendente" };
 const URG = { urgente: ["bad", "Urgente"], media: ["warn", "Média"], baixa: ["info", "Baixa"] };
-const CH = { aprov: "lumina-aprovacoes", triados: "lumina-triados", override: "lumina-override" };
+const CH = { aprov: "lumina-aprovacoes", triados: "lumina-triados", override: "lumina-override", encam: "lumina-encaminhados", corr: "lumina-correcoes" };
+const AREAS = { juridico: "Jurídico", privacidade: "Privacidade (encarregado LGPD)", supervisao: "Supervisão do atendimento", logistica: "Logística", producao: "Produção" };
+const CATEGORIAS = ["atraso", "troca", "cancelamento", "duvida_produto", "reclamacao", "lgpd", "outro"];
 const PAGINA = 200;
 let dados = null, entrada = [], porId = new Map(), entradaPorId = new Map();
 let sel = new Set(), triados = new Set(lerJSON(CH.triados, []));
@@ -14,6 +16,8 @@ function lerJSON(k, pad) { try { return JSON.parse(localStorage.getItem(k)) ?? p
 function gravarJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 const lerAprov = () => lerJSON(CH.aprov, {});
 const lerOverride = () => lerJSON(CH.override, {});
+const lerEncam = () => lerJSON(CH.encam, {});
+const lerCorr = () => lerJSON(CH.corr, {});
 const salvarTriados = () => gravarJSON(CH.triados, [...triados]);
 
 /* Auditor da edição humana: espelho de pipeline/auditor.py (tests/test_pipeline.py confere o PROIBIDO). */
@@ -96,6 +100,17 @@ function selos(t) {
   s.push(t.acao === "responder_auto" ? `<span class="selo selo--ok">${ICO("check")}respondido</span>` : `<span class="selo selo--info">atendente</span>`);
   s.push(`<span class="selo selo--neutro">${esc(t.categoria)}</span>`);
   return s.join("");
+}
+
+/* Área sugerida por regra em código; a atendente pode trocar. */
+function areaSugerida(tickets) {
+  const s = new Set(tickets.flatMap((t) => t.evidencia?.sinais || []));
+  if (s.has("juridico")) return "juridico";
+  if (s.has("lgpd")) return "privacidade";
+  if (s.has("injecao")) return "supervisao";
+  if (s.has("defeito_nosso") || s.has("defeito_ambiguo") || s.has("erro_cliente")) return "producao";
+  if (tickets.some((t) => t.categoria === "atraso")) return "logistica";
+  return "supervisao";
 }
 
 /* Pedido: situação calculada contra a data de referência. */
@@ -245,19 +260,22 @@ function gruposFila() {
 }
 
 function renderAprovacao() {
-  const ap = lerAprov(), gs = gruposFila();
-  const feitos = gs.filter((g) => ap[g.chave]).length;
-  $("#progresso").textContent = gs.length ? `${feitos} de ${gs.length} casos aprovados` : "";
+  const ap = lerAprov(), en = lerEncam(), gs = gruposFila();
+  const feitos = gs.filter((g) => ap[g.chave] || en[g.chave]).length;
+  $("#progresso").textContent = gs.length ? `${feitos} de ${gs.length} casos resolvidos` : "";
   $("#progresso-barra").style.width = gs.length ? `${(feitos / gs.length) * 100}%` : "0";
-  $("#exportar").disabled = !Object.keys(ap).length;
-  $("#exportar").textContent = `Exportar aprovados (${Object.keys(ap).length})`;
+  const nRes = Object.keys(ap).length + Object.keys(en).length, nCorr = Object.keys(lerCorr()).length;
+  $("#exportar").disabled = !nRes;
+  $("#exportar").textContent = `Exportar resolvidos (${nRes})`;
+  $("#exportar-corr").hidden = !nCorr;
+  $("#exportar-corr").textContent = `Baixar correções (${nCorr})`;
   $("#lista-aprovacao").innerHTML = gs.length ? gs.map((g) => {
-    const t0 = g.tickets[0], a = ap[g.chave], [pc, pr] = rotuloPrioridade(t0);
+    const t0 = g.tickets[0], a = ap[g.chave], enc = en[g.chave], [pc, pr] = rotuloPrioridade(t0), sug = areaSugerida(g.tickets);
     const ids = new Set(g.tickets.map((t) => t.ticket_id));
     const outros = t0.pedido_dados ? entrada.filter((e) => e.pedido_citado === t0.pedido && !ids.has(e.ticket_id)) : [];
     const resp = a?.resposta ?? t0.resposta;
     const falhas = auditarTexto(resp, t0.pedido, t0.pedido_dados);
-    return `<li><article class="aprov-card ${tom(t0)} ${a ? "aprovado" : ""}" data-grupo="${esc(g.chave)}">
+    return `<li><article class="aprov-card ${tom(t0)} ${a || enc ? "aprovado" : ""}" data-grupo="${esc(g.chave)}">
       <header class="aprov-cab"><span class="selo selo--${pc}">${pc === "bad" ? ICO("alerta") : ""}${esc(pr)}</span>
         ${g.tickets.length > 1 ? `<span class="selo selo--warn">${g.tickets.length} tickets do mesmo pedido</span>` : ""}
         <span class="id">${g.tickets.map((t) => esc(t.ticket_id)).join(" · ")}</span></header>
@@ -272,9 +290,13 @@ function renderAprovacao() {
         <textarea rows="3" data-edit="${esc(g.chave)}" ${a ? "readonly" : ""}>${esc(resp)}</textarea></label>
       <div class="auditoria ${falhas.length ? "falha" : "ok"}" data-aud="${esc(g.chave)}">${falhas.length
         ? `${ICO("alerta")} Auditor bloqueou: ${falhas.map(esc).join("; ")}` : `${ICO("check")} Auditor: texto confere com os dados`}</div>
-      <div class="aprov">
-        ${a ? `<button class="btn btn--ok" data-aprovar="${esc(g.chave)}">${ICO("check")} Aprovado · desfazer</button>`
-            : `<button class="btn btn--lima" data-aprovar="${esc(g.chave)}" ${falhas.length ? "disabled" : ""}>Aprovar resposta</button>`}
+      <div class="aprov">${enc
+        ? `<span class="selo selo--ok">${ICO("check")}Encaminhado para ${esc(AREAS[enc.area])}</span><button class="link" data-encaminhar="${esc(g.chave)}">desfazer</button>`
+        : a ? `<button class="btn btn--ok" data-aprovar="${esc(g.chave)}">${ICO("check")} Aprovado · desfazer</button>`
+        : `<button class="btn btn--lima" data-aprovar="${esc(g.chave)}" ${falhas.length ? "disabled" : ""}>Aprovar resposta</button>
+           <span class="encaminhar"><label class="sr" for="area-${esc(g.chave)}">Área</label>
+             <select id="area-${esc(g.chave)}" data-area="${esc(g.chave)}">${Object.entries(AREAS).map(([k, v]) => `<option value="${k}" ${k === sug ? "selected" : ""}>${esc(v)}${k === sug ? " (sugerida)" : ""}</option>`).join("")}</select>
+             <button class="btn btn--fantasma" data-encaminhar="${esc(g.chave)}">Encaminhar</button></span>`}
       </div></article></li>`;
   }).join("") : `<li class="vazio">${triados.size ? "Nenhum caso para a atendente entre os tickets triados." : "Nenhum ticket triado ainda. Selecione tickets na Entrada e envie para a triagem."}</li>`;
 }
@@ -299,17 +321,67 @@ function aprovar(chave) {
   gravarJSON(CH.aprov, ap); renderAprovacao(); renderBadge();
 }
 
-function exportar() {
-  const ap = lerAprov(), q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const linhas = [["ticket_id", "pedido", "resposta_final", "editada_pela_atendente", "aprovado_em"]];
-  for (const a of Object.values(ap)) for (const id of a.tickets) linhas.push([id, a.pedido, a.resposta, a.editada ? "sim" : "nao", a.em]);
+function encaminhar(chave) {
+  const en = lerEncam();
+  if (en[chave]) delete en[chave];
+  else {
+    const g = gruposFila().find((x) => x.chave === chave); if (!g) return;
+    en[chave] = { tickets: g.tickets.map((t) => t.ticket_id), pedido: g.tickets[0].pedido || "",
+      area: document.querySelector(`[data-area="${CSS.escape(chave)}"]`).value, sugerida: areaSugerida(g.tickets), em: new Date().toISOString() };
+  }
+  gravarJSON(CH.encam, en); renderAprovacao(); renderBadge();
+}
+
+function csvBaixar(linhas, nome) {
+  const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const blob = new Blob(["﻿" + linhas.map((l) => l.map(q).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" });
-  const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `aprovados-${dados.hoje}.csv` });
+  const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: nome });
   link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
+function exportar() {
+  const linhas = [["ticket_id", "pedido", "desfecho", "area", "resposta_final", "editada_pela_atendente", "registrado_em"]];
+  for (const a of Object.values(lerAprov())) for (const id of a.tickets) linhas.push([id, a.pedido, "resposta_aprovada", "", a.resposta, a.editada ? "sim" : "nao", a.em]);
+  for (const e of Object.values(lerEncam())) for (const id of e.tickets) linhas.push([id, e.pedido, "encaminhado", AREAS[e.area], "", "", e.em]);
+  csvBaixar(linhas, `resolvidos-${dados.hoje}.csv`);
+}
+
+/* Correções da atendente: viram casos no formato de evals/casos.csv (python -m pipeline.importar_correcoes). */
+function exportarCorrecoes() {
+  const linhas = [["id", "entrada", "resultado_esperado", "tipo", "como_checar"]];
+  for (const [id, c] of Object.entries(lerCorr()))
+    linhas.push([`A-${id}`, porId.get(id)?.texto ?? "", `${c.categoria}|${c.acao}|${c.pedido}`, "correcao_atendente",
+      `sistema decidiu ${c.original.categoria}/${c.original.acao}; atendente: ${c.motivo}`]);
+  csvBaixar(linhas, `correcoes-${dados.hoje}.csv`);
+}
+
+function salvarCorrecao(id) {
+  const t = porId.get(id), motivo = $("#corr-motivo").value.trim();
+  if (!motivo) { $("#corr-erro").textContent = "Explique o motivo: ele vira o critério do caso de teste."; $("#corr-motivo").focus(); return; }
+  const c = lerCorr();
+  c[id] = { categoria: $("#corr-cat").value, acao: $("#corr-acao").value, pedido: t.pedido || "", motivo,
+    original: { categoria: t.categoria, acao: t.acao }, em: new Date().toISOString() };
+  gravarJSON(CH.corr, c); abrirEvidencia(id); if (!$("#tela-aprovacao").hidden) renderAprovacao();
+}
+
+function blocoCorrecao(t) {
+  if (!triados.has(t.ticket_id)) return "";
+  const c = lerCorr()[t.ticket_id];
+  if (c) return `<div class="correcao"><b>Correção registrada:</b> ${esc(c.categoria)} / ${esc(ROTULO[c.acao])}: ${esc(c.motivo)}
+    <button class="link" data-remover-corr="${esc(t.ticket_id)}">remover</button></div>`;
+  return `<details class="corrigir"><summary>Discordar da decisão</summary>
+    <p class="sub">A correção não muda a decisão agora: vira um caso de teste para medir e ajustar as regras.</p>
+    <div class="corr-campos">
+      <label><span class="etiqueta">Categoria correta</span><select id="corr-cat">${CATEGORIAS.map((k) => `<option ${k === t.categoria ? "selected" : ""}>${k}</option>`).join("")}</select></label>
+      <label><span class="etiqueta">Ação correta</span><select id="corr-acao">${Object.entries(ROTULO).map(([k, v]) => `<option value="${k}" ${k !== t.acao ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+    </div>
+    <label><span class="etiqueta">Motivo</span><textarea id="corr-motivo" rows="2" placeholder="Ex.: o cliente já tinha reclamado deste pedido antes"></textarea></label>
+    <p id="corr-erro" class="corr-erro" role="alert"></p>
+    <button class="btn btn--lima btn--p" data-salvar-corr="${esc(t.ticket_id)}">Salvar correção</button></details>`;
+}
+
 function renderBadge() {
-  const ap = lerAprov(), pend = gruposFila().filter((g) => !ap[g.chave]).length;
+  const ap = lerAprov(), en = lerEncam(), pend = gruposFila().filter((g) => !ap[g.chave] && !en[g.chave]).length;
   $("#badge-fila").textContent = pend || "";
   $("#badge-fila").setAttribute("aria-label", pend + " casos pendentes");
 }
@@ -330,6 +402,7 @@ function abrirEvidencia(id) {
     <dt>Auditor</dt><dd>${au.aprovado ? `<span class="selo selo--ok">${ICO("check")}aprovado</span>` : `<span class="selo selo--bad">reprovado</span>`}${(au.falhas || []).length ? ": " + au.falhas.map(esc).join("; ") : ""}</dd>
     <dt>Resposta</dt><dd>${esc(t.resposta || "—")}</dd>
   </dl>
+  ${blocoCorrecao(t0)}
   <details class="ev-log"><summary>Passo a passo dos agentes (${log.length} registros)</summary>
     <ol>${log.map((r) => `<li><b>${esc(r.etapa)}</b> ${["leitor", "juiz", "redator", "auditor"].includes(r.etapa) ? resumoLog(r) : esc(typeof r.saida === "object" ? JSON.stringify(r.saida) : r.saida)} <span class="id">${esc(r.ms)} ms</span></li>`).join("")}</ol>
   </details>`;
@@ -348,12 +421,16 @@ function ir(tela) {
 }
 
 document.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar");
+  const el = e.target.closest("[data-tela],[data-ir],[data-abrir],[data-aprovar],[data-triar-um],[data-filtrar],[data-status],[data-puxar],[data-encaminhar],[data-salvar-corr],[data-remover-corr],.fechar,#triar-sel,#limpar-sel,#mais,#reiniciar,#exportar,#exportar-corr");
   if (!el || el.disabled) return;
   if (el.dataset.tela || el.dataset.ir) ir(el.dataset.tela || el.dataset.ir);
   else if (el.dataset.abrir) abrirEvidencia(el.dataset.abrir);
   else if (el.dataset.triarUm) triar([el.dataset.triarUm]);
   else if (el.dataset.aprovar) aprovar(el.dataset.aprovar);
+  else if (el.dataset.encaminhar) encaminhar(el.dataset.encaminhar);
+  else if (el.dataset.salvarCorr) salvarCorrecao(el.dataset.salvarCorr);
+  else if (el.dataset.removerCorr) { const c = lerCorr(); delete c[el.dataset.removerCorr]; gravarJSON(CH.corr, c); abrirEvidencia(el.dataset.removerCorr); if (!$("#tela-aprovacao").hidden) renderAprovacao(); }
+  else if (el.id === "exportar-corr") exportarCorrecoes();
   else if (el.dataset.puxar) { const o = lerOverride(); o[el.dataset.puxar] = { em: new Date().toISOString() }; gravarJSON(CH.override, o); renderResultado(); renderBadge(); }
   else if (el.dataset.filtrar) { filtro.urg = filtro.urg === el.dataset.filtrar ? "" : el.dataset.filtrar; limite = PAGINA; renderEntrada(); }
   else if (el.dataset.status) {
@@ -364,8 +441,8 @@ document.addEventListener("click", (e) => {
   else if (el.id === "mais") { limite += PAGINA; renderEntrada(); }
   else if (el.id === "exportar") exportar();
   else if (el.id === "reiniciar") {
-    if (!confirm("Reiniciar a demonstração? Triagens, aprovações e revisões deste navegador serão apagadas.")) return;
-    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {});
+    if (!confirm("Reiniciar a demonstração? Triagens, aprovações, encaminhamentos e correções deste navegador serão apagadas.")) return;
+    triados.clear(); sel.clear(); salvarTriados(); gravarJSON(CH.aprov, {}); gravarJSON(CH.override, {}); gravarJSON(CH.encam, {}); gravarJSON(CH.corr, {});
     renderBadge(); ir("entrada");
   } else if (el.classList.contains("fechar")) $("#evidencia").close();
 });

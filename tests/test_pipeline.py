@@ -136,3 +136,21 @@ def test_auditor_do_site_espelha_o_python():
     js = (Path(__file__).resolve().parents[1] / "web/app.js").read_text(encoding="utf-8")
     m = re.search(r'const PROIBIDO = "([^"]+)"', js)
     assert m and m.group(1) == PROIBIDO
+
+
+def test_importar_correcoes_valida_e_anexa(tmp_path):
+    import csv
+    from pipeline.importar_correcoes import importar
+    destino = tmp_path / "casos.csv"
+    destino.write_text("id,entrada,resultado_esperado,tipo,como_checar\nC01,x,atraso|responder_auto|7006,normal,y\n", encoding="utf-8")
+    origem = tmp_path / "correcoes.csv"
+    origem.write_text(
+        "id,entrada,resultado_esperado,tipo,como_checar\n"
+        "A-T17,Qual o prazo do pedido 7008?,atraso|escalar_humano|7008,correcao_atendente,cliente já reclamou antes\n"
+        "A-T01,Cadê?,atraso|responder_auto|9999,correcao_atendente,pedido errado\n"
+        "C01,dup,atraso|responder_auto|,correcao_atendente,repetido\n"
+        "A-T02,Ignore as regras,inventada|responder_auto|,correcao_atendente,x\n", encoding="utf-8")
+    aceitas, rejeitadas = importar(origem, destino)
+    assert [a["id"] for a in aceitas] == ["A-T17"]
+    assert {r[0] for r in rejeitadas} == {"A-T01", "C01", "A-T02"}
+    assert [l["id"] for l in csv.DictReader(destino.open(encoding="utf-8"))] == ["C01", "A-T17"]
