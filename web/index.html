@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumina Triagem</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="pular" href="#principal">Pular para o conteúdo</a>
+<header class="topo">
+  <div class="marca"><span class="logo" aria-hidden="true"></span><strong>Lumina Triagem</strong></div>
+  <p id="fonte" class="fonte" role="status">Carregando dados…</p>
+</header>
+<nav class="abas" aria-label="Telas">
+  <button data-tela="entrada" aria-current="page">1. Entrada</button>
+  <button data-tela="resultado">2. Resultado</button>
+  <button data-tela="aprovacao">3. Fila de aprovação <span id="badge-fila" class="badge"></span></button>
+  <button data-tela="log">4. Log</button>
+</nav>
+<main id="principal" tabindex="-1">
+  <div id="estado" class="estado" role="status"></div>
+
+  <section id="tela-entrada" class="tela">
+    <h1>Fila de entrada</h1>
+    <p class="sub">Os 20 tickets na ordem em que chegaram. Casos delicados misturados com pedidos simples.</p>
+    <ol id="lista-entrada" class="lista"></ol>
+    <div class="acao-fixa"><button class="primario" data-ir="resultado">Ir para a triagem →</button></div>
+  </section>
+
+  <section id="tela-resultado" class="tela" hidden>
+    <h1>Triagem</h1>
+    <div class="linha-topo">
+      <button id="rodar" class="primario">Rodar triagem</button>
+      <ol class="etapas" id="etapas" aria-label="Etapas">
+        <li data-e="leitor"><b>Leitor</b><small>IA lê o texto</small></li>
+        <li data-e="juiz"><b>Juiz</b><small>regra decide</small></li>
+        <li data-e="redator"><b>Redator</b><small>monta resposta</small></li>
+        <li data-e="auditor"><b>Auditor</b><small>confere dados</small></li>
+      </ol>
+    </div>
+    <div id="saida-resultado" hidden>
+      <div class="contagem" aria-live="polite">
+        <div class="kpi"><span id="k-auto" class="num">0</span><span>respondidos automaticamente</span></div>
+        <div class="kpi humano"><span id="k-humano" class="num">0</span><span>para a atendente</span></div>
+        <div class="kpi critico"><span id="k-crit" class="num">0</span><span>críticos (jurídico, Procon, LGPD, manipulação)</span></div>
+      </div>
+      <div class="colunas">
+        <div><h2>Para a atendente</h2><ol id="lista-humano" class="lista"></ol></div>
+        <div><h2>Resposta automática</h2><ol id="lista-auto" class="lista"></ol></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tela-aprovacao" class="tela" hidden>
+    <h1>Fila de aprovação</h1>
+    <p class="sub">Só os casos escalados, críticos primeiro. Aprovação fica salva apenas neste navegador.</p>
+    <ol id="lista-aprovacao" class="lista"></ol>
+    <button id="limpar" class="secundario">Desfazer todas as aprovações</button>
+  </section>
+
+  <section id="tela-log" class="tela" hidden>
+    <h1>Log da execução</h1>
+    <p class="sub" id="log-meta"></p>
+    <label class="filtro">Ticket <select id="filtro-log"><option value="">Todos</option></select></label>
+    <div class="tabela-wrap"><table>
+      <thead><tr><th>Ticket</th><th>Etapa</th><th>Entrada</th><th>Saída</th><th class="n">ms</th><th>Versão</th></tr></thead>
+      <tbody id="corpo-log"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<dialog id="evidencia" aria-labelledby="ev-titulo">
+  <div class="ev-cab"><h2 id="ev-titulo"></h2><button class="fechar" aria-label="Fechar">✕</button></div>
+  <div id="ev-corpo"></div>
+</dialog>
+<script src="app.js"></script>
+</body>
+</html>
